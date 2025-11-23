@@ -10,59 +10,24 @@
 </head>
 
 <body>
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo">
-                <span class="logo-icon">🧠</span>
-                <span class="logo-text">BrainrotBot</span>
-            </div>
-
-            <nav class="nav-menu">
-                <div class="nav-item active" data-page="dashboard">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                    <span>Dashboard</span>
+    <!-- Login Page -->
+    <div id="login-page" class="login-container">
+        <div class="login-box">
+            <div class="login-logo">🧠</div>
+            <h2 class="login-title">Admin Panel</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password-input" placeholder="Enter password" required autofocus>
                 </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+            <p id="login-error" style="color: var(--danger); margin-top: 1rem; text-align: center; display: none;"></p>
+        </div>
+    </div>
 
-                <div class="nav-item" data-page="brainrots">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path
-                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                        </path>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                    </svg>
-                    <span>Brainrots</span>
-                </div>
-
-                <div class="nav-item" data-page="giveaways">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <polyline points="20 12 20 22 4 22 4 12"></polyline>
-                        <rect x="2" y="7" width="20" height="5"></rect>
-                        <line x1="12" y1="22" x2="12" y2="7"></line>
-                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-                    </svg>
-                    <span>Giveaways</span>
-                </div>
-
-                <div class="nav-item" data-page="settings">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path
-                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                        </path>
-                    </svg>
-                    <span>Settings</span>
-                </div>
-            </nav>
-        </aside>
-
+    <!-- Main App (hidden until logged in) -->
+    <div id="main-app" class="app-container" style="display: none;">
         <!-- Main Content -->
         <main class="main-content">
             <header>
@@ -72,6 +37,7 @@
                         <option value="">Loading servers...</option>
                     </select>
                     <div class="user-badge">Admin</div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
                 </div>
             </header>
 
@@ -99,14 +65,14 @@
                 </div>
 
                 <div class="actions-bar">
-                    <button class="btn btn-success" onclick="refreshAllData()">
+                    <button class="btn btn-success" onclick="refreshDashboard()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <polyline points="23 4 23 10 17 10"></polyline>
                             <polyline points="1 20 1 14 7 14"></polyline>
                             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                         </svg>
-                        Refresh Data
+                        Refresh Dashboard
                     </button>
                 </div>
             </section>
@@ -124,13 +90,13 @@
                         </svg>
                         Add Brainrot
                     </button>
-                    <button class="btn btn-secondary" onclick="fetchBrainrots()">
+                    <button class="btn btn-success" onclick="fetchBrainrots()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <polyline points="23 4 23 10 17 10"></polyline>
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                         </svg>
-                        Refresh
+                        Refresh Brainrots
                     </button>
                 </div>
 
@@ -171,13 +137,13 @@
                         </svg>
                         Create Giveaway
                     </button>
-                    <button class="btn btn-secondary" onclick="fetchGiveaways()">
+                    <button class="btn btn-success" onclick="fetchGiveaways()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <polyline points="23 4 23 10 17 10"></polyline>
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                         </svg>
-                        Refresh
+                        Refresh Giveaways
                     </button>
                 </div>
 
@@ -189,6 +155,7 @@
                                 <th>Prize</th>
                                 <th>Winners</th>
                                 <th>Participants</th>
+                                <th>Channel ID</th>
                                 <th>Ends At</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -196,7 +163,7 @@
                         </thead>
                         <tbody id="giveaways-table">
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 2rem;">Loading...</td>
+                                <td colspan="8" style="text-align: center; padding: 2rem;">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -229,6 +196,51 @@
                 </div>
             </section>
         </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="dashboard">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Dashboard</span>
+            </button>
+
+            <button class="nav-btn" data-page="brainrots">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                    </path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                <span>Brainrots</span>
+            </button>
+
+            <button class="nav-btn" data-page="giveaways">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                    <rect x="2" y="7" width="20" height="5"></rect>
+                    <line x1="12" y1="22" x2="12" y2="7"></line>
+                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                </svg>
+                <span>Giveaways</span>
+            </button>
+
+            <button class="nav-btn" data-page="settings">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span>Settings</span>
+            </button>
+        </nav>
     </div>
 
     <!-- Brainrot Modal -->
@@ -326,6 +338,14 @@
                 <div class="form-group">
                     <label>Number of Winners *</label>
                     <input type="number" name="winners" value="1" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Channel ID *</label>
+                    <input type="text" name="channel_id" required
+                        placeholder="Channel ID where giveaway will be posted">
+                    <small style="color: var(--text-muted);">Right-click channel → Copy ID (Developer Mode
+                        required)</small>
                 </div>
 
                 <div class="form-group">

@@ -26,7 +26,6 @@ router.post('/brainrots', async (req, res) => {
     try {
         const { name, rarity, mutation, income_per_second, price_eur, traits, quantity, owner_id } = req.body;
 
-        // Calculate crypto prices
         const rates = await getCryptoRates();
         const price_crypto = {
             BTC: price_eur / rates.BTC,
@@ -121,60 +120,27 @@ router.get('/giveaways', async (req, res) => {
     }
 });
 
-// POST /api/giveaways - Create giveaway (via bot command)
+// POST /api/giveaways - Create giveaway
 router.post('/giveaways', async (req, res) => {
     try {
-        const { prize, duration, winners, rigged_user, guild_id } = req.body;
+        const { prize, duration, winners, rigged_user, guild_id, channel_id } = req.body;
 
         if (!guild_id) {
             return res.status(400).json({ error: 'Guild ID is required' });
         }
 
-        const client = req.client;
-        const guild = await client.guilds.fetch(guild_id);
-
-        if (!guild) {
-            return res.status(404).json({ error: 'Guild not found' });
+        if (!channel_id) {
+            return res.status(400).json({ error: 'Channel ID is required' });
         }
 
-        // Find a text channel to send the giveaway
-        const channel = guild.channels.cache.find(ch => ch.isTextBased() && ch.permissionsFor(guild.members.me).has('SendMessages'));
+        const client = req.client;
+        const channel = await client.channels.fetch(channel_id);
 
         if (!channel) {
-            return res.status(404).json({ error: 'No suitable channel found' });
+            return res.status(404).json({ error: 'Channel not found' });
         }
 
-        // Simulate slash command interaction
-        const mockInteraction = {
-            channelId: channel.id,
-            guildId: guild_id,
-            client: client,
-            deferReply: async () => { },
-            editReply: async (data) => {
-                return await channel.send(data);
-            },
-            options: {
-                getSubcommand: () => 'create',
-                getString: (name) => {
-                    if (name === 'prize') return prize;
-                    if (name === 'duration') return duration;
-                },
-                getInteger: (name) => {
-                    if (name === 'winners') return parseInt(winners);
-                },
-                getUser: (name) => {
-                    if (name === 'rigged_user' && rigged_user) {
-                        return { id: rigged_user };
-                    }
-                    return null;
-                }
-            }
-        };
-
-        // Use the bot's giveaway handler
-        const botHandlers = require('./bot');
-        // Note: This is a simplified approach. In production, you'd want to properly invoke the command
-
+        // TODO: Invoke bot command to create giveaway
         res.json({ success: true, message: 'Giveaway creation initiated' });
     } catch (error) {
         console.error('Error creating giveaway:', error);
@@ -186,7 +152,7 @@ router.post('/giveaways', async (req, res) => {
 router.post('/giveaways/:id/end', async (req, res) => {
     try {
         const { id } = req.params;
-        const { winner } = req.body;
+        const { winner, channel_id } = req.body;
 
         const [rows] = await pool.query('SELECT * FROM giveaways WHERE id = ?', [id]);
 
@@ -204,8 +170,14 @@ router.post('/giveaways/:id/end', async (req, res) => {
             await pool.query('UPDATE giveaways SET rigged_winner_id = ? WHERE id = ?', [winner, id]);
         }
 
-        // Trigger endGiveaway function
-        // This would need to be properly implemented with access to the bot client
+        // Mark as ended and trigger endGiveaway
+        const client = req.client;
+        const { endGiveaway } = require('./bot');
+
+        if (endGiveaway && client) {
+            await endGiveaway(giveaway.message_id, client);
+        }
+
         res.json({ success: true, message: 'Giveaway ended successfully' });
     } catch (error) {
         console.error('Error ending giveaway:', error);
@@ -217,6 +189,7 @@ router.post('/giveaways/:id/end', async (req, res) => {
 router.post('/giveaways/:id/reroll', async (req, res) => {
     try {
         const { id } = req.params;
+        const { channel_id } = req.body;
 
         const [rows] = await pool.query('SELECT * FROM giveaways WHERE id = ?', [id]);
 
@@ -230,10 +203,47 @@ router.post('/giveaways/:id/reroll', async (req, res) => {
             return res.status(400).json({ error: 'Giveaway is still active' });
         }
 
-        res.json({ success: true, message: 'Giveaway reroll initiated' });
+        let participants = giveaway.participants ? (typeof giveaway.participants === 'string' ? JSON.parse(giveaway.participants) : giveaway.participants) : [];
+
+        if (participants.length === 0) {
+            return res.status(400).json({ error: 'No participants to reroll' });
+        }
+
+        const winners = [];
+        const potentialWinners = [...participants];
+
+        for (let i = 0; i < giveaway.winners_count; i++) {
+            if (potentialWinners.length === 0) break;
+            const randomIndex = Math.floor(Math.random() * potentialWinners.length);
+            winners.push(potentialWinners.splice(randomIndex, 1)[0]);
+        }
+
+        try {
+            const client = req.client;
+            const channel = await client.channels.fetch(channel_id || giveaway.channel_id);
+            const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
+
+            await channel.send(`🔄 Reroll pour **${giveaway.prize}**! Félicitations à ${winnerMentions}!`);
+        } catch (e) {
+            console.error('Error sending reroll message:', e);
+        }
+
+        res.json({ success: true, message: 'Giveaway rerolled successfully', winners });
     } catch (error) {
         console.error('Error rerolling giveaway:', error);
         res.status(500).json({ error: 'Failed to reroll giveaway' });
+    }
+});
+
+// DELETE /api/giveaways/:id - Delete giveaway
+router.delete('/giveaways/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM giveaways WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Giveaway deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting giveaway:', error);
+        res.status(500).json({ error: 'Failed to delete giveaway' });
     }
 });
 

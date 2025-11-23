@@ -1,15 +1,51 @@
 // Configuration
 let API_URL = localStorage.getItem('api_url') || '/api';
 let CURRENT_GUILD_ID = localStorage.getItem('current_guild_id') || null;
+const PASSWORD = 'Azerty123_';
+
+// Authentication
+function checkAuth() {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (isAuthenticated) {
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
+        initApp();
+    } else {
+        document.getElementById('login-page').style.display = 'flex';
+        document.getElementById('main-app').style.display = 'none';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('isAuthenticated');
+    location.reload();
+}
+
+document.getElementById('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const password = document.getElementById('password-input').value;
+    const errorEl = document.getElementById('login-error');
+
+    if (password === PASSWORD) {
+        localStorage.setItem('isAuthenticated', 'true');
+        checkAuth();
+    } else {
+        errorEl.textContent = 'Incorrect password';
+        errorEl.style.display = 'block';
+        setTimeout(() => {
+            errorEl.style.display = 'none';
+        }, 3000);
+    }
+});
 
 // Navigation
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
 
-        item.classList.add('active');
-        const page = item.dataset.page;
+        btn.classList.add('active');
+        const page = btn.dataset.page;
         document.getElementById(page).classList.add('active');
     });
 });
@@ -35,17 +71,20 @@ function showToast(message, type = 'success') {
 }
 
 // Initial Load
-document.addEventListener('DOMContentLoaded', async () => {
+function initApp() {
     const apiUrlInput = document.getElementById('api-url-input');
     if (apiUrlInput) {
         apiUrlInput.value = API_URL === '/api' ? window.location.origin + '/api' : API_URL;
     }
 
-    await fetchGuilds();
-    refreshAllData();
+    fetchGuilds();
+    refreshDashboard();
+    fetchBrainrots();
+    fetchGiveaways();
+}
 
-    // Auto-refresh every 30 seconds
-    setInterval(refreshAllData, 30000);
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
 });
 
 // Guild Selector
@@ -54,15 +93,15 @@ if (guildSelector) {
     guildSelector.addEventListener('change', (e) => {
         CURRENT_GUILD_ID = e.target.value;
         localStorage.setItem('current_guild_id', CURRENT_GUILD_ID);
-        refreshAllData();
+        refreshDashboard();
+        fetchGiveaways();
     });
 }
 
-function refreshAllData() {
+// Refresh Functions
+function refreshDashboard() {
     fetchStats();
-    fetchBrainrots();
-    fetchGiveaways();
-    showToast('Data refreshed!', 'success');
+    showToast('Dashboard refreshed!', 'success');
 }
 
 // API Functions
@@ -122,7 +161,6 @@ async function fetchBrainrots() {
 
         data.forEach(item => {
             const tr = document.createElement('tr');
-            const traits = Array.isArray(item.traits) ? item.traits.join(', ') : item.traits || 'None';
 
             tr.innerHTML = `
                 <td>${item.id}</td>
@@ -142,6 +180,8 @@ async function fetchBrainrots() {
             `;
             tbody.appendChild(tr);
         });
+
+        showToast('Brainrots refreshed!', 'success');
     } catch (e) {
         console.error('Error fetching brainrots:', e);
         showToast('Failed to fetch brainrots', 'error');
@@ -157,7 +197,7 @@ async function fetchGiveaways() {
         tbody.innerHTML = '';
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No giveaways found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">No giveaways found</td></tr>';
             return;
         }
 
@@ -176,17 +216,21 @@ async function fetchGiveaways() {
                 <td><strong>${item.prize}</strong></td>
                 <td>${item.winners_count}</td>
                 <td>${participants}</td>
+                <td><code>${item.channel_id || 'N/A'}</code></td>
                 <td>${endsAt}</td>
                 <td>${status}</td>
                 <td>
-                    <div style="display: flex; gap: 0.5rem;">
-                        ${!isEnded ? `<button class="btn btn-danger" style="padding: 0.5rem 1rem;" onclick="endGiveaway(${item.id})">End</button>` : ''}
-                        ${isEnded ? `<button class="btn btn-secondary" style="padding: 0.5rem 1rem;" onclick="rerollGiveaway(${item.id})">Reroll</button>` : ''}
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        ${!isEnded ? `<button class="btn btn-secondary" style="padding: 0.5rem 1rem;" onclick="endGiveaway(${item.id}, '${item.channel_id}')">End</button>` : ''}
+                        ${isEnded ? `<button class="btn btn-secondary" style="padding: 0.5rem 1rem;" onclick="rerollGiveaway(${item.id}, '${item.channel_id}')">Reroll</button>` : ''}
+                        <button class="btn btn-danger" style="padding: 0.5rem 1rem;" onclick="deleteGiveaway(${item.id})">Delete</button>
                     </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
+
+        showToast('Giveaways refreshed!', 'success');
     } catch (e) {
         console.error('Error fetching giveaways:', e);
         showToast('Failed to fetch giveaways', 'error');
@@ -226,13 +270,14 @@ function editBrainrot(item) {
     openModal('brainrotModal');
 }
 
-async function endGiveaway(id) {
+async function endGiveaway(id, channelId) {
     if (!confirm('Are you sure you want to end this giveaway?')) return;
 
     try {
         const res = await fetch(`${API_URL}/giveaways/${id}/end`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channel_id: channelId })
         });
 
         if (res.ok) {
@@ -248,13 +293,14 @@ async function endGiveaway(id) {
     }
 }
 
-async function rerollGiveaway(id) {
+async function rerollGiveaway(id, channelId) {
     if (!confirm('Are you sure you want to reroll this giveaway?')) return;
 
     try {
         const res = await fetch(`${API_URL}/giveaways/${id}/reroll`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channel_id: channelId })
         });
 
         if (res.ok) {
@@ -266,6 +312,24 @@ async function rerollGiveaway(id) {
     } catch (e) {
         console.error(e);
         showToast('Error rerolling giveaway', 'error');
+    }
+}
+
+async function deleteGiveaway(id) {
+    if (!confirm('Are you sure you want to delete this giveaway?')) return;
+
+    try {
+        const res = await fetch(`${API_URL}/giveaways/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Giveaway deleted successfully!', 'success');
+            fetchGiveaways();
+            fetchStats();
+        } else {
+            throw new Error('Failed to delete');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Error deleting giveaway', 'error');
     }
 }
 
