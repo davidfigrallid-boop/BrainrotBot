@@ -36,9 +36,12 @@ app.use((req, res, next) => {
 // Register API Routes
 app.use('/api', apiRoutes);
 
-// Basic health check
+// Serve static files (HTML, CSS, JS) for admin panel
+app.use(express.static('.'));
+
+// Serve index.html at root
 app.get('/', (req, res) => {
-    res.send('BrainrotsMarket Backend is Running');
+    res.sendFile('index.html', { root: '.' });
 });
 
 // --- Discord Bot Setup ---

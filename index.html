@@ -1,33 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BrainrotsMarket Admin</title>
+    <title>BrainrotsMarket Admin Panel</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">🧠</span>
+                <span class="logo-text">BrainrotBot</span>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active" data-page="dashboard">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </div>
+
+                <div class="nav-item" data-page="brainrots">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                        </path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <span>Brainrots</span>
+                </div>
+
+                <div class="nav-item" data-page="giveaways">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                        <rect x="2" y="7" width="20" height="5"></rect>
+                        <line x1="12" y1="22" x2="12" y2="7"></line>
+                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                    </svg>
+                    <span>Giveaways</span>
+                </div>
+
+                <div class="nav-item" data-page="settings">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
         <main class="main-content">
             <header>
-                <div class="logo-header">
-                    <h1>🧠</h1>
-                </div>
-                <div class="header-right">
+                <h1 class="header-title">Admin Panel</h1>
+                <div class="header-actions">
                     <select id="guild-selector" class="server-select">
-                        <option value="">Loading Servers...</option>
+                        <option value="">Loading servers...</option>
                     </select>
-                    <div class="user-info">Admin</div>
+                    <div class="user-badge">Admin</div>
                 </div>
             </header>
 
-            <!-- Dashboard Tab -->
-            <section id="dashboard" class="tab-content active">
+            <!-- Dashboard Page -->
+            <section id="dashboard" class="page-content active">
                 <h2 class="page-title">Dashboard</h2>
+
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Total Brainrots</h3>
@@ -39,20 +90,50 @@
                     </div>
                     <div class="stat-card">
                         <h3>Bitcoin Price</h3>
-                        <p id="stat-btc">Loading...</p>
+                        <p id="stat-btc">$0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Ethereum Price</h3>
+                        <p id="stat-eth">$0</p>
                     </div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="activityChart"></canvas>
+
+                <div class="actions-bar">
+                    <button class="btn btn-success" onclick="refreshAllData()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Refresh Data
+                    </button>
                 </div>
             </section>
 
-            <!-- Brainrots Tab -->
-            <section id="brainrots" class="tab-content">
+            <!-- Brainrots Page -->
+            <section id="brainrots" class="page-content">
                 <h2 class="page-title">Brainrots Management</h2>
+
                 <div class="actions-bar">
-                    <button class="btn-primary" onclick="openModal('brainrotModal')">Add Brainrot</button>
+                    <button class="btn btn-primary" onclick="openModal('brainrotModal')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Brainrot
+                    </button>
+                    <button class="btn btn-secondary" onclick="fetchBrainrots()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Refresh
+                    </button>
                 </div>
+
                 <div class="table-container">
                     <table>
                         <thead>
@@ -61,7 +142,7 @@
                                 <th>Name</th>
                                 <th>Rarity</th>
                                 <th>Mutation</th>
-                                <th>Income</th>
+                                <th>Income/s</th>
                                 <th>Price (€)</th>
                                 <th>Qty</th>
                                 <th>Owner</th>
@@ -69,53 +150,80 @@
                             </tr>
                         </thead>
                         <tbody id="brainrots-table">
-                            <!-- Populated by JS -->
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 2rem;">Loading...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- Giveaways Tab -->
-            <section id="giveaways" class="tab-content">
-                <h2 class="page-title">Giveaways</h2>
+            <!-- Giveaways Page -->
+            <section id="giveaways" class="page-content">
+                <h2 class="page-title">Giveaways Management</h2>
+
                 <div class="actions-bar">
-                    <button class="btn-primary" onclick="openModal('giveawayModal')">Create Giveaway</button>
+                    <button class="btn btn-primary" onclick="openModal('giveawayModal')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Create Giveaway
+                    </button>
+                    <button class="btn btn-secondary" onclick="fetchGiveaways()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Refresh
+                    </button>
                 </div>
+
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th>ID</th>
                                 <th>Prize</th>
                                 <th>Winners</th>
+                                <th>Participants</th>
                                 <th>Ends At</th>
-                                <th>Rigged User</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="giveaways-table">
-                            <!-- Populated by JS -->
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 2rem;">Loading...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- Settings Tab -->
-            <section id="settings" class="tab-content">
+            <!-- Settings Page -->
+            <section id="settings" class="page-content">
                 <h2 class="page-title">Settings</h2>
-                <div class="settings-container">
-                    <h3>API Configuration</h3>
+
+                <div class="table-container" style="padding: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">API Configuration</h3>
                     <div class="form-group">
-                        <label>Backend URL</label>
+                        <label>Backend API URL</label>
                         <input type="text" id="api-url-input" placeholder="http://localhost:3000">
-                        <button class="btn-secondary" onclick="saveApiUrl()">Save</button>
                     </div>
-                    <h3>Bot Configuration</h3>
+                    <button class="btn btn-primary" onclick="saveApiUrl()">Save Configuration</button>
+
+                    <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">Bot Configuration</h3>
                     <div class="form-group">
-                        <label>Default Crypto</label>
+                        <label>Default Cryptocurrency</label>
                         <select id="default-crypto-select" onchange="updateDefaultCrypto()">
-                            <option value="BTC">BTC</option>
-                            <option value="ETH">ETH</option>
-                            <option value="SOL">SOL</option>
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="SOL">Solana (SOL)</option>
                         </select>
                     </div>
                 </div>
@@ -123,58 +231,22 @@
         </main>
     </div>
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <button class="nav-btn active" data-tab="dashboard">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-        </button>
-        <button class="nav-btn" data-tab="brainrots">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path
-                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                </path>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
-        </button>
-        <button class="nav-btn" data-tab="giveaways">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 12 20 22 4 22 4 12"></polyline>
-                <rect x="2" y="7" width="20" height="5"></rect>
-                <line x1="12" y1="22" x2="12" y2="7"></line>
-                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-            </svg>
-        </button>
-        <button class="nav-btn" data-tab="settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path
-                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                </path>
-            </svg>
-        </button>
-    </nav>
-
-    <!-- Add/Edit Brainrot Modal -->
+    <!-- Brainrot Modal -->
     <div id="brainrotModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('brainrotModal')">&times;</span>
             <h2 id="brainrotModalTitle">Add New Brainrot</h2>
             <form id="addBrainrotForm">
                 <input type="hidden" name="id" id="brainrot-id">
+
                 <div class="form-group">
-                    <label>Name</label>
+                    <label>Name *</label>
                     <input type="text" name="name" id="brainrot-name" required>
                 </div>
+
                 <div class="form-group">
-                    <label>Rarity</label>
-                    <select name="rarity" id="brainrot-rarity">
+                    <label>Rarity *</label>
+                    <select name="rarity" id="brainrot-rarity" required>
                         <option value="Common">Common</option>
                         <option value="Rare">Rare</option>
                         <option value="Epic">Epic</option>
@@ -185,6 +257,7 @@
                         <option value="OG">OG</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Mutation</label>
                     <select name="mutation" id="brainrot-mutation">
@@ -200,57 +273,75 @@
                         <option value="Yin Yang">Yin Yang</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <label>Income per Second</label>
+                    <label>Income per Second *</label>
                     <input type="number" name="income_per_second" id="brainrot-income" step="0.01" required>
                 </div>
+
                 <div class="form-group">
-                    <label>Price (€)</label>
+                    <label>Price (€) *</label>
                     <input type="number" name="price_eur" id="brainrot-price" step="0.01" required>
                 </div>
+
                 <div class="form-group">
                     <label>Traits (comma separated)</label>
-                    <input type="text" name="traits" id="brainrot-traits" placeholder="Fire, Taco">
+                    <input type="text" name="traits" id="brainrot-traits" placeholder="Fire, Taco, Galactic">
                 </div>
+
                 <div class="form-group">
                     <label>Quantity</label>
                     <input type="number" name="quantity" id="brainrot-quantity" value="1" min="1">
                 </div>
+
                 <div class="form-group">
                     <label>Owner ID (Optional)</label>
-                    <input type="text" name="owner_id" id="brainrot-owner">
+                    <input type="text" name="owner_id" id="brainrot-owner" placeholder="Discord User ID">
                 </div>
-                <button type="submit" class="btn-primary">Save</button>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save
+                    Brainrot</button>
             </form>
         </div>
     </div>
 
-    <!-- Create Giveaway Modal -->
+    <!-- Giveaway Modal -->
     <div id="giveawayModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('giveawayModal')">&times;</span>
             <h2>Create Giveaway</h2>
             <form id="createGiveawayForm">
                 <div class="form-group">
-                    <label>Prize</label>
-                    <input type="text" name="prize" required>
+                    <label>Prize *</label>
+                    <input type="text" name="prize" required placeholder="100€ Discord Nitro">
                 </div>
+
                 <div class="form-group">
-                    <label>Duration (e.g. 1m, 1h)</label>
-                    <input type="text" name="duration" required>
+                    <label>Duration *</label>
+                    <input type="text" name="duration" required placeholder="1h, 30m, 2d">
+                    <small style="color: var(--text-muted);">Examples: 1h (1 hour), 30m (30 minutes), 2d (2
+                        days)</small>
                 </div>
+
                 <div class="form-group">
-                    <label>Winners</label>
+                    <label>Number of Winners *</label>
                     <input type="number" name="winners" value="1" min="1" required>
                 </div>
+
                 <div class="form-group">
                     <label>Rigged User ID (Optional)</label>
-                    <input type="text" name="rigged_user">
+                    <input type="text" name="rigged_user" placeholder="Discord User ID">
+                    <small style="color: var(--text-muted);">Force a specific user to win</small>
                 </div>
-                <button type="submit" class="btn-primary">Create</button>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create
+                    Giveaway</button>
             </form>
         </div>
     </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
 
     <script src="script.js"></script>
 </body>
