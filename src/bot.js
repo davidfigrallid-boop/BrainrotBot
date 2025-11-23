@@ -77,15 +77,22 @@ function aggregateBrainrots(brainrotsList) {
     return aggregated;
 }
 
-const quantiteDisplay = br.quantity > 1 ? ` \`x${br.quantity}\`` : '';
-const mutationDisplay = br.mutation && br.mutation !== 'Default' ? ` **[${br.mutation}]**` : '';
-const traitsDisplay = showTraits && br.traits && br.traits.length > 0
-    ? `\n✨ Traits: ${br.traits.join(', ')}`
-    : '';
+function formatBrainrotLine(br, crypto, showTraits = false) {
+    let cryptoPriceStr = 'N/A';
+    if (br.price_crypto && br.price_crypto[crypto]) {
+        cryptoPriceStr = formatCryptoPrice(br.price_crypto[crypto]);
+    }
 
-return `> **${br.name}** ${rarityColors[br.rarity] || ''}${mutationDisplay}${quantiteDisplay}\n` +
-    `\`💰 Price: €${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})\`\n` +
-    `\`📈 Income: ${formatPrice(parseFloat(br.income_per_second))}/s\`${traitsDisplay}\n`;
+    const quantiteDisplay = br.quantity > 1 ? ` \`x${br.quantity}\`` : '';
+    const mutationDisplay = br.mutation && br.mutation !== 'Default' ? ` **[${br.mutation}]**` : '';
+    const traitsDisplay = showTraits && br.traits && br.traits.length > 0
+        ? `\n✨ Traits: ${br.traits.join(', ')}`
+        : '';
+
+    return `> **${br.name}** ${rarityColors[br.rarity] || ''}${mutationDisplay}${quantiteDisplay}\n` +
+        `\`💰 Price: €${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})\`\n` +
+        `\`📈 Income: ${formatPrice(parseFloat(br.income_per_second))}/s\`${traitsDisplay}\n`;
+}
 
 async function buildEmbed(viewMode = 'rarity') {
     const brainrots = await getAllBrainrots();
