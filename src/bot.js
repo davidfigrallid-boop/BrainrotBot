@@ -77,22 +77,15 @@ function aggregateBrainrots(brainrotsList) {
     return aggregated;
 }
 
-function formatBrainrotLine(br, crypto, showTraits = false) {
-    let cryptoPriceStr = 'N/A';
-    if (br.price_crypto && br.price_crypto[crypto]) {
-        cryptoPriceStr = formatCryptoPrice(br.price_crypto[crypto]);
-    }
+const quantiteDisplay = br.quantity > 1 ? ` \`x${br.quantity}\`` : '';
+const mutationDisplay = br.mutation && br.mutation !== 'Default' ? ` **[${br.mutation}]**` : '';
+const traitsDisplay = showTraits && br.traits && br.traits.length > 0
+    ? `\n✨ Traits: ${br.traits.join(', ')}`
+    : '';
 
-    const quantiteDisplay = br.quantity > 1 ? ` x${br.quantity}` : '';
-    const mutationDisplay = br.mutation ? ` [${br.mutation}]` : '';
-    const traitsDisplay = showTraits && br.traits && br.traits.length > 0
-        ? ` {${br.traits.join(', ')}}`
-        : '';
-
-    return `**${br.name}${quantiteDisplay}${mutationDisplay}${traitsDisplay}**\n` +
-        `├ Income: ${formatPrice(parseFloat(br.income_per_second))}/s\n` +
-        `├ Prix: €${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})\n\n`;
-}
+return `> **${br.name}** ${rarityColors[br.rarity] || ''}${mutationDisplay}${quantiteDisplay}\n` +
+    `\`💰 Price: €${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})\`\n` +
+    `\`📈 Income: ${formatPrice(parseFloat(br.income_per_second))}/s\`${traitsDisplay}\n`;
 
 async function buildEmbed(viewMode = 'rarity') {
     const brainrots = await getAllBrainrots();
@@ -118,6 +111,7 @@ async function buildEmbed(viewMode = 'rarity') {
     }
 
     if (viewMode === 'rarity') {
+        embed.setTitle('🎨 Trié par Rareté');
         const grouped = {};
         sorted.forEach(br => {
             if (!grouped[br.rarity]) grouped[br.rarity] = [];
@@ -136,6 +130,7 @@ async function buildEmbed(viewMode = 'rarity') {
         const sortedByIncome = [...sorted].sort((a, b) => b.income_per_second - a.income_per_second);
         embed.setDescription(sortedByIncome.map(br => formatBrainrotLine(br, crypto, true)).join('\n') || '*Aucun*');
     } else if (viewMode === 'mutations') {
+        embed.setTitle('🧬 Trié par Mutation');
         const grouped = {};
         sorted.forEach(br => {
             const m = br.mutation || 'Sans mutation';
@@ -146,6 +141,7 @@ async function buildEmbed(viewMode = 'rarity') {
             embed.addFields({ name: `🧬 ${m}`, value: grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('\n') || '*Aucun*', inline: false });
         });
     } else if (viewMode === 'traits') {
+        embed.setTitle('✨ Trié par Traits');
         const grouped = {};
         sorted.forEach(br => {
             const traits = br.traits || [];
@@ -360,7 +356,20 @@ const commands = [
 
 async function registerCommands(client) {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-    try { await rest.put(Routes.applicationCommands(client.user.id), { body: commands }); } catch (e) { console.error(e); }
+    try {
+        console.log('Started refreshing application (/) commands.');
+
+        // Clear potential guild-based duplicates
+        const guilds = client.guilds.cache.map(g => g.id);
+        for (const guildId of guilds) {
+            await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), { body: [] });
+        }
+
+        // Register Global Commands
+        await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+
+        console.log('Successfully reloaded application (/) commands.');
+    } catch (e) { console.error(e); }
 }
 
 function setup(client) {
