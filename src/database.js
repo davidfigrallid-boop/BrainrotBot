@@ -26,7 +26,7 @@ async function initDatabase() {
                 mutation VARCHAR(50) DEFAULT 'Default',
                 income_per_second DECIMAL(20, 8) DEFAULT 0,
                 price_eur DECIMAL(20, 2) DEFAULT 0,
-                price_crypto DECIMAL(20, 8) DEFAULT 0,
+                price_crypto JSON,
                 traits JSON,
                 quantity INT DEFAULT 1,
                 owner_id VARCHAR(255),
@@ -34,6 +34,14 @@ async function initDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Attempt to migrate price_crypto to JSON if it exists as DECIMAL
+        try {
+            await connection.query("ALTER TABLE brainrots MODIFY COLUMN price_crypto JSON");
+        } catch (e) {
+            // Ignore error if column is already JSON or other non-critical issue
+            // console.log('Migration note:', e.message);
+        }
 
         // Create Giveaways table
         await connection.query(`

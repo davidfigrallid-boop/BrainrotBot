@@ -364,7 +364,7 @@ async function registerCommands(client) {
 }
 
 function setup(client) {
-    client.on('ready', () => {
+    client.once('ready', () => {
         registerCommands(client);
 
         // Persistent Giveaway Checker
