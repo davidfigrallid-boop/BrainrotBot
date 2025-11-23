@@ -46,12 +46,23 @@ async function initDatabase() {
         }
 
         // Add sold columns if they don't exist (migration)
-        try {
-            await connection.query("ALTER TABLE brainrots ADD COLUMN IF NOT EXISTS sold BOOLEAN DEFAULT FALSE");
-            await connection.query("ALTER TABLE brainrots ADD COLUMN IF NOT EXISTS sold_price DECIMAL(20, 2) DEFAULT NULL");
-            await connection.query("ALTER TABLE brainrots ADD COLUMN IF NOT EXISTS sold_date DATETIME DEFAULT NULL");
-        } catch (e) {
-            // Columns may already exist
+        const columnsToAdd = [
+            "ADD COLUMN sold BOOLEAN DEFAULT FALSE",
+            "ADD COLUMN sold_price DECIMAL(20, 2) DEFAULT NULL",
+            "ADD COLUMN sold_date DATETIME DEFAULT NULL"
+        ];
+
+        for (const col of columnsToAdd) {
+            try {
+                await connection.query(`ALTER TABLE brainrots ${col}`);
+                console.log(`✅ Added column: ${col}`);
+            } catch (e) {
+                if (e.code === 'ER_DUP_FIELDNAME') {
+                    // Column already exists, ignore
+                } else {
+                    console.error(`❌ Failed to add column (${col}):`, e.message);
+                }
+            }
         }
 
         // Create Giveaways table
