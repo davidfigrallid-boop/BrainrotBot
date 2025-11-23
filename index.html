@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainrotsMarket Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <main class="main-content">
+            <header>
+                <div class="logo-header">
+                    <h1>🧠</h1>
+                </div>
+                <div class="header-right">
+                    <select id="guild-selector" class="server-select">
+                        <option value="">Loading Servers...</option>
+                    </select>
+                    <div class="user-info">Admin</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-content active">
+                <h2 class="page-title">Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Brainrots</h3>
+                        <p id="stat-brainrots">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Giveaways</h3>
+                        <p id="stat-giveaways">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Bitcoin Price</h3>
+                        <p id="stat-btc">Loading...</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Brainrots Tab -->
+            <section id="brainrots" class="tab-content">
+                <h2 class="page-title">Brainrots Management</h2>
+                <div class="actions-bar">
+                    <button class="btn-primary" onclick="openModal('brainrotModal')">Add Brainrot</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Rarity</th>
+                                <th>Mutation</th>
+                                <th>Income</th>
+                                <th>Price (€)</th>
+                                <th>Qty</th>
+                                <th>Owner</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="brainrots-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Giveaways Tab -->
+            <section id="giveaways" class="tab-content">
+                <h2 class="page-title">Giveaways</h2>
+                <div class="actions-bar">
+                    <button class="btn-primary" onclick="openModal('giveawayModal')">Create Giveaway</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Prize</th>
+                                <th>Winners</th>
+                                <th>Ends At</th>
+                                <th>Rigged User</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="giveaways-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="settings" class="tab-content">
+                <h2 class="page-title">Settings</h2>
+                <div class="settings-container">
+                    <h3>API Configuration</h3>
+                    <div class="form-group">
+                        <label>Backend URL</label>
+                        <input type="text" id="api-url-input" placeholder="http://localhost:3000">
+                        <button class="btn-secondary" onclick="saveApiUrl()">Save</button>
+                    </div>
+                    <h3>Bot Configuration</h3>
+                    <div class="form-group">
+                        <label>Default Crypto</label>
+                        <select id="default-crypto-select" onchange="updateDefaultCrypto()">
+                            <option value="BTC">BTC</option>
+                            <option value="ETH">ETH</option>
+                            <option value="SOL">SOL</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-tab="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+        </button>
+        <button class="nav-btn" data-tab="brainrots">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                </path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+        </button>
+        <button class="nav-btn" data-tab="giveaways">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                <rect x="2" y="7" width="20" height="5"></rect>
+                <line x1="12" y1="22" x2="12" y2="7"></line>
+                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+            </svg>
+        </button>
+        <button class="nav-btn" data-tab="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+            </svg>
+        </button>
+    </nav>
+
+    <!-- Add/Edit Brainrot Modal -->
+    <div id="brainrotModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('brainrotModal')">&times;</span>
+            <h2 id="brainrotModalTitle">Add New Brainrot</h2>
+            <form id="addBrainrotForm">
+                <input type="hidden" name="id" id="brainrot-id">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="name" id="brainrot-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Rarity</label>
+                    <select name="rarity" id="brainrot-rarity">
+                        <option value="Common">Common</option>
+                        <option value="Rare">Rare</option>
+                        <option value="Epic">Epic</option>
+                        <option value="Legendary">Legendary</option>
+                        <option value="Mythic">Mythic</option>
+                        <option value="Brainrot God">Brainrot God</option>
+                        <option value="Secret">Secret</option>
+                        <option value="OG">OG</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mutation</label>
+                    <select name="mutation" id="brainrot-mutation">
+                        <option value="Default">Default</option>
+                        <option value="Gold">Gold</option>
+                        <option value="Diamond">Diamond</option>
+                        <option value="Rainbow">Rainbow</option>
+                        <option value="Lava">Lava</option>
+                        <option value="Bloodrot">Bloodrot</option>
+                        <option value="Celestial">Celestial</option>
+                        <option value="Candy">Candy</option>
+                        <option value="Galaxy">Galaxy</option>
+                        <option value="Yin Yang">Yin Yang</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Income per Second</label>
+                    <input type="number" name="income_per_second" id="brainrot-income" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Price (€)</label>
+                    <input type="number" name="price_eur" id="brainrot-price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Traits (comma separated)</label>
+                    <input type="text" name="traits" id="brainrot-traits" placeholder="Fire, Taco">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" name="quantity" id="brainrot-quantity" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Owner ID (Optional)</label>
+                    <input type="text" name="owner_id" id="brainrot-owner">
+                </div>
+                <button type="submit" class="btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Giveaway Modal -->
+    <div id="giveawayModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('giveawayModal')">&times;</span>
+            <h2>Create Giveaway</h2>
+            <form id="createGiveawayForm">
+                <div class="form-group">
+                    <label>Prize</label>
+                    <input type="text" name="prize" required>
+                </div>
+                <div class="form-group">
+                    <label>Duration (e.g. 1m, 1h)</label>
+                    <input type="text" name="duration" required>
+                </div>
+                <div class="form-group">
+                    <label>Winners</label>
+                    <input type="number" name="winners" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Rigged User ID (Optional)</label>
+                    <input type="text" name="rigged_user">
+                </div>
+                <button type="submit" class="btn-primary">Create</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
