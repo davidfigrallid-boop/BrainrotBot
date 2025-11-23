@@ -670,3 +670,59 @@ function copyJSONToClipboard() {
         });
     }
 }
+
+// Purge All Brainrots
+async function purgeAllBrainrots() {
+    const confirmation = confirm('⚠️ ATTENTION ⚠️\n\nÊtes-vous sûr de vouloir supprimer TOUS les brainrots ?\n\nCette action est IRRÉVERSIBLE !');
+    
+    if (!confirmation) return;
+
+    const doubleConfirmation = confirm('Dernière confirmation !\n\nTapez OK pour supprimer définitivement tous les brainrots.');
+    
+    if (!doubleConfirmation) return;
+
+    try {
+        const res = await fetch(`${API_URL}/brainrots`);
+        const brainrots = await res.json();
+
+        if (brainrots.length === 0) {
+            showToast('Aucun brainrot à supprimer', 'warning');
+            return;
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const brainrot of brainrots) {
+            try {
+                const deleteRes = await fetch(`${API_URL}/brainrots/${brainrot.id}`, { 
+                    method: 'DELETE' 
+                });
+
+                if (deleteRes.ok) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    console.error(`Failed to delete brainrot ID: ${brainrot.id}`);
+                }
+            } catch (e) {
+                errorCount++;
+                console.error(`Error deleting brainrot ID: ${brainrot.id}`, e);
+            }
+        }
+
+        if (successCount > 0) {
+            showToast(`${successCount} brainrot(s) supprimé(s) !`, 'success');
+            fetchBrainrots();
+            fetchStats();
+        }
+
+        if (errorCount > 0) {
+            showToast(`${errorCount} brainrot(s) n'ont pas pu être supprimés`, 'error');
+        }
+
+    } catch (e) {
+        console.error('Error purging brainrots:', e);
+        showToast('Erreur lors de la suppression', 'error');
+    }
+}
