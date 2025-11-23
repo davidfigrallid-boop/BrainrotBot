@@ -90,8 +90,8 @@ function formatBrainrotLine(br, crypto, showTraits = false) {
         : '';
 
     return `**${br.name}**${quantiteDisplay}${mutationDisplay}${traitsDisplay}\n` +
-        `├ Income: ${formatPrice(parseFloat(br.income_per_second))}/s\n` +
-        `├ Prix: €${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})\n\n`;
+        `├ Income: **${formatPrice(parseFloat(br.income_per_second))}/s**\n` +
+        `├ Prix: **€${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})**\n\n`;
 }
 
 async function buildEmbed(viewMode = 'rarity') {
@@ -126,7 +126,7 @@ async function buildEmbed(viewMode = 'rarity') {
         });
         Object.keys(grouped).forEach(rarity => {
             const itemsList = grouped[rarity].map(br => formatBrainrotLine(br, crypto, true)).join('');
-            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}`, value: '\n‎‎ \n' + (itemsList || '*Aucun*') + '\n‎‎ \n', inline: false });
+            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}:`, value: '\n‎‎ \n' + (itemsList || '*Aucun*') + '‎‎', inline: false });
         });
     } else if (viewMode === 'price_eur') {
         embed.setTitle('💰 Trié par Prix EUR');
@@ -145,7 +145,7 @@ async function buildEmbed(viewMode = 'rarity') {
             grouped[m].push(br);
         });
         Object.keys(grouped).sort().forEach(m => {
-            embed.addFields({ name: `🧬 ${m}`, value: '\n‎‎ \n' + (grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n‎‎ \n', inline: false });
+            embed.addFields({ name: `🧬 ${m}:`, value: '\n‎‎ \n' + (grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '‎‎', inline: false });
         });
     } else if (viewMode === 'traits') {
         embed.setTitle('✨ Trié par Traits');
@@ -163,7 +163,7 @@ async function buildEmbed(viewMode = 'rarity') {
             }
         });
         Object.keys(grouped).sort().forEach(t => {
-            embed.addFields({ name: `✨ ${t}`, value: '\n‎‎ \n' + (grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n‎‎ \n', inline: false });
+            embed.addFields({ name: `✨ ${t}:`, value: '\n‎‎ \n' + (grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '‎‎', inline: false });
         });
     }
 
