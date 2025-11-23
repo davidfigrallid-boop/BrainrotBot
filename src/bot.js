@@ -1,4 +1,4 @@
-const { REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, PermissionFlagsBits } = require('discord.js');
 const { pool } = require('./database');
 const { parsePrice, formatPrice, formatCryptoPrice, convertEURToAllCryptos, getSupportedCryptos, getCryptoRates } = require('./utils');
 
@@ -170,48 +170,56 @@ async function buildEmbed(viewMode = 'rarity') {
     return embed;
 }
 
-function createNavigationButtons() {
-    return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('view_rarity').setLabel('Rareté').setStyle(ButtonStyle.Primary).setEmoji('🎨'),
-        new ButtonBuilder().setCustomId('view_price_eur').setLabel('Prix EUR').setStyle(ButtonStyle.Success).setEmoji('💰'),
-        new ButtonBuilder().setCustomId('view_income').setLabel('Income').setStyle(ButtonStyle.Success).setEmoji('📈'),
-        new ButtonBuilder().setCustomId('view_mutations').setLabel('Mutations').setStyle(ButtonStyle.Secondary).setEmoji('🧬'),
-        new ButtonBuilder().setCustomId('view_traits').setLabel('Traits').setStyle(ButtonStyle.Secondary).setEmoji('✨')
-    );
+function createNavigationMenu() {
+    const select = new StringSelectMenuBuilder()
+        .setCustomId('view_select')
+        .setPlaceholder('Choisir une catégorie de tri')
+        .addOptions(
+            new StringSelectMenuOptionBuilder().setLabel('Rareté').setValue('rarity').setEmoji('🎨'),
+            new StringSelectMenuOptionBuilder().setLabel('Prix EUR').setValue('price_eur').setEmoji('💰'),
+            new StringSelectMenuOptionBuilder().setLabel('Income').setValue('income').setEmoji('📈'),
+            new StringSelectMenuOptionBuilder().setLabel('Mutations').setValue('mutations').setEmoji('🧬'),
+            new StringSelectMenuOptionBuilder().setLabel('Traits').setValue('traits').setEmoji('✨')
+        );
+
+    return new ActionRowBuilder().addComponents(select);
 }
 
 // --- Brainrot Handlers ---
 
 async function handleList(interaction) {
+    await interaction.deferReply();
     const embed = await buildEmbed('rarity');
-    const buttons = createNavigationButtons();
-    const message = await interaction.reply({ embeds: [embed], components: [buttons], fetchReply: true });
+    const menu = createNavigationMenu();
+    const message = await interaction.editReply({ embeds: [embed], components: [menu] });
     await setConfig('listMessageId', message.id);
     await setConfig('listChannelId', message.channelId);
 }
 
 async function handleRefreshList(interaction) {
+    await interaction.deferReply({ ephemeral: true });
     const channelId = await getConfig('listChannelId');
     const messageId = await getConfig('listMessageId');
 
     if (!channelId || !messageId) {
-        return interaction.reply({ content: 'Aucune liste active trouvée. Utilisez /list d\'abord.', ephemeral: true });
+        return interaction.editReply({ content: 'Aucune liste active trouvée. Utilisez /list d\'abord.' });
     }
 
     try {
         const channel = await interaction.client.channels.fetch(channelId);
         const message = await channel.messages.fetch(messageId);
         const embed = await buildEmbed('rarity'); // Default to rarity view on refresh
-        const buttons = createNavigationButtons();
-        await message.edit({ embeds: [embed], components: [buttons] });
-        await interaction.reply({ content: 'Liste mise à jour !', ephemeral: true });
+        const menu = createNavigationMenu();
+        await message.edit({ embeds: [embed], components: [menu] });
+        await interaction.editReply({ content: 'Liste mise à jour !' });
     } catch (error) {
         console.error('Error refreshing list:', error);
-        await interaction.reply({ content: 'Impossible de mettre à jour la liste (message peut-être supprimé).', ephemeral: true });
+        await interaction.editReply({ content: 'Impossible de mettre à jour la liste (message peut-être supprimé).' });
     }
 }
 
 async function handleAddBrainrot(interaction) {
+    await interaction.deferReply();
     const name = interaction.options.getString('name');
     const rarity = interaction.options.getString('rarity');
     const incomeRate = parsePrice(interaction.options.getString('income_rate'));
@@ -231,36 +239,37 @@ async function handleAddBrainrot(interaction) {
         [name, rarity, incomeRate, mutation, JSON.stringify(traits), priceEUR, JSON.stringify(priceCrypto), owner, quantity]
     );
 
-    await interaction.reply(`✅ **${name}** ajouté !`);
+    await interaction.editReply(`✅ **${name}** ajouté !`);
 }
 
 async function handleRemoveBrainrot(interaction) {
+    await interaction.deferReply();
     const name = interaction.options.getString('name');
-    // Simple delete by name for now, ideally should filter more
     await pool.query('DELETE FROM brainrots WHERE name = ?', [name]);
-    await interaction.reply(`✅ Brainrot **${name}** supprimé (si existant).`);
+    await interaction.editReply(`✅ Brainrot **${name}** supprimé (si existant).`);
 }
 
 async function handleUpdateBrainrot(interaction) {
-    // Simplified update logic
+    await interaction.deferReply();
     const name = interaction.options.getString('name');
     const priceEUR = interaction.options.getString('price_eur');
 
     if (priceEUR) {
         const parsed = parsePrice(priceEUR);
         await pool.query('UPDATE brainrots SET price_eur = ? WHERE name = ?', [parsed, name]);
-        await interaction.reply(`✅ Prix de **${name}** mis à jour.`);
+        await interaction.editReply(`✅ Prix de **${name}** mis à jour.`);
     } else {
-        await interaction.reply('⚠️ Rien à mettre à jour.');
+        await interaction.editReply('⚠️ Rien à mettre à jour.');
     }
 }
 
 async function handleShowCompte(interaction) {
+    await interaction.deferReply();
     const brainrots = await getAllBrainrots();
     const aggregated = aggregateBrainrots(brainrots);
     const withCompte = aggregated.filter(br => br.owner_id);
 
-    if (withCompte.length === 0) return interaction.reply('Aucun compte assigné.');
+    if (withCompte.length === 0) return interaction.editReply('Aucun compte assigné.');
 
     const embed = new EmbedBuilder().setTitle('📊 Brainrots par Compte').setColor(0xFFD700);
     const grouped = {};
@@ -274,7 +283,7 @@ async function handleShowCompte(interaction) {
         embed.addFields({ name: `👤 ${owner}`, value: items, inline: false });
     });
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 }
 
 // --- Giveaway Handlers ---
@@ -282,6 +291,7 @@ async function handleShowCompte(interaction) {
 async function handleGiveawayCommand(interaction) {
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === 'create') {
+        await interaction.deferReply(); // Fix timeout
         const prize = interaction.options.getString('prize');
         const durationStr = interaction.options.getString('duration');
         const winnersCount = interaction.options.getInteger('winners');
@@ -290,7 +300,7 @@ async function handleGiveawayCommand(interaction) {
         let durationMs = 0;
         if (durationStr.endsWith('m')) durationMs = parseInt(durationStr) * 60 * 1000;
         else if (durationStr.endsWith('h')) durationMs = parseInt(durationStr) * 60 * 60 * 1000;
-        else if (durationStr.endsWith('s')) durationMs = parseInt(durationStr) * 1000; // Added seconds support
+        else if (durationStr.endsWith('s')) durationMs = parseInt(durationStr) * 1000;
         else durationMs = 60 * 1000;
 
         const endTime = new Date(Date.now() + durationMs);
@@ -303,14 +313,15 @@ async function handleGiveawayCommand(interaction) {
             new ButtonBuilder().setCustomId('join_giveaway').setLabel('Participate').setStyle(ButtonStyle.Primary)
         );
 
-        const message = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+        const message = await interaction.editReply({ embeds: [embed], components: [row] });
 
         await pool.query(
             'INSERT INTO giveaways (message_id, channel_id, guild_id, prize, winners_count, end_time, rigged_winner_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [message.id, interaction.channelId, interaction.guildId, prize, winnersCount, endTime, riggedUser ? riggedUser.id : null]
         );
 
-        setTimeout(() => endGiveaway(message.id, interaction.client), durationMs);
+        // Giveaway ending is handled by persistent loop, but for short duration we can keep a timeout as backup or for immediate feedback if < 10s
+        // But persistent loop is safer.
     }
 }
 
@@ -421,13 +432,16 @@ function setup(client) {
         }, 10 * 1000); // Check every 10 seconds
     });
     client.on('interactionCreate', async interaction => {
-        if (interaction.isButton()) {
-            if (interaction.customId.startsWith('view_')) {
-                const viewMode = interaction.customId.replace('view_', '');
+        if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'view_select') {
+                await interaction.deferUpdate();
+                const viewMode = interaction.values[0];
                 const embed = await buildEmbed(viewMode);
-                const buttons = createNavigationButtons();
-                await interaction.update({ embeds: [embed], components: [buttons] });
-            } else if (interaction.customId === 'join_giveaway') {
+                // Keep the menu
+                await interaction.editReply({ embeds: [embed] });
+            }
+        } else if (interaction.isButton()) {
+            if (interaction.customId === 'join_giveaway') {
                 const [rows] = await pool.query('SELECT * FROM giveaways WHERE message_id = ?', [interaction.message.id]);
                 if (rows.length > 0) {
                     const giveaway = rows[0];

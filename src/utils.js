@@ -35,20 +35,32 @@ function formatCryptoPrice(price) {
 // Crypto Logic
 const SUPPORTED_CRYPTOS = ['BTC', 'ETH', 'LTC', 'SOL'];
 
+let cachedRates = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 async function getCryptoRates() {
+    const now = Date.now();
+    if (cachedRates && (now - lastFetchTime < CACHE_DURATION)) {
+        return cachedRates;
+    }
+
     try {
         const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,litecoin,solana&vs_currencies=eur');
         const data = response.data;
 
-        return {
+        cachedRates = {
             'BTC': data.bitcoin?.eur || 35000,
             'ETH': data.ethereum?.eur || 2000,
             'LTC': data.litecoin?.eur || 70,
             'SOL': data.solana?.eur || 60
         };
+        lastFetchTime = now;
+        return cachedRates;
     } catch (error) {
         console.error('Error fetching crypto rates:', error.message);
-        // Fallback to defaults if API fails
+        // Return cached if available even if expired, otherwise defaults
+        if (cachedRates) return cachedRates;
         return {
             'BTC': 35000, 'ETH': 2000, 'LTC': 70, 'SOL': 60
         };
