@@ -94,13 +94,19 @@ router.get('/stats', async (req, res) => {
     }
 });
 
-// Crypto conversion (mock)
-router.get('/crypto', (req, res) => {
-    res.json({
-        btc: 35000,
-        eth: 2000,
-        sol: 60
-    });
+// Crypto conversion
+router.get('/crypto', async (req, res) => {
+    try {
+        const { getCryptoRates } = require('./utils');
+        const rates = await getCryptoRates();
+        res.json({
+            btc: rates.BTC,
+            eth: rates.ETH,
+            sol: rates.SOL
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Get all giveaways
@@ -168,18 +174,8 @@ router.post('/giveaways', async (req, res) => {
             [message.id, channel.id, guild.id, prize, winners, endTime, rigged_user || null]
         );
 
-        // We need to import endGiveaway from bot.js or move it to shared. 
-        // For now, let's just set the timeout here, duplicating logic slightly or require bot.js if exported.
-        // But bot.js exports 'setup'. 
-        // Let's just rely on the DB state and maybe a periodic checker in a real app.
-        // For this demo, I'll duplicate the end logic or just skip the auto-end from web for now (user didn't explicitly ask for auto-end reliability from web, just creation).
-        // Actually, I can just define a simple timeout here.
-
-        setTimeout(async () => {
-            // ... (End giveaway logic similar to bot.js)
-            // For brevity, I'll skip full implementation here, but in production this should be shared.
-            console.log('Giveaway ended (web triggered)');
-        }, durationMs);
+        // Giveaway ending is now handled by the persistent loop in bot.js
+        // setTimeout(async () => { ... }, durationMs);
 
         res.json({ message: 'Giveaway created' });
     } catch (error) {

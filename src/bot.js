@@ -364,7 +364,19 @@ async function registerCommands(client) {
 }
 
 function setup(client) {
-    client.on('ready', () => { registerCommands(client); });
+    client.on('ready', () => {
+        registerCommands(client);
+
+        // Persistent Giveaway Checker
+        setInterval(async () => {
+            try {
+                const [rows] = await pool.query('SELECT * FROM giveaways WHERE ended = FALSE AND end_time <= NOW()');
+                for (const giveaway of rows) {
+                    await endGiveaway(giveaway.message_id, client);
+                }
+            } catch (e) { console.error('Error in giveaway loop:', e); }
+        }, 10 * 1000); // Check every 10 seconds
+    });
     client.on('interactionCreate', async interaction => {
         if (interaction.isButton()) {
             if (interaction.customId.startsWith('view_')) {

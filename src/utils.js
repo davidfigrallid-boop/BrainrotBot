@@ -37,23 +37,28 @@ const SUPPORTED_CRYPTOS = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'TR
 
 async function getCryptoRates() {
     try {
-        // Simple mock for now to avoid rate limits or API keys, but structure allows for real API
-        // In production, you'd fetch from CoinGecko or Binance
+        const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,tron,litecoin,polkadot&vs_currencies=eur');
+        const data = response.data;
+
         return {
-            'BTC': 35000,
-            'ETH': 2000,
-            'SOL': 60,
-            'BNB': 250,
-            'XRP': 0.6,
-            'ADA': 0.35,
-            'DOGE': 0.07,
-            'TRX': 0.1,
-            'LTC': 70,
-            'DOT': 5
+            'BTC': data.bitcoin?.eur || 35000,
+            'ETH': data.ethereum?.eur || 2000,
+            'SOL': data.solana?.eur || 60,
+            'BNB': data.binancecoin?.eur || 250,
+            'XRP': data.ripple?.eur || 0.6,
+            'ADA': data.cardano?.eur || 0.35,
+            'DOGE': data.dogecoin?.eur || 0.07,
+            'TRX': data.tron?.eur || 0.1,
+            'LTC': data.litecoin?.eur || 70,
+            'DOT': data.polkadot?.eur || 5
         };
     } catch (error) {
-        console.error('Error fetching crypto rates:', error);
-        return {};
+        console.error('Error fetching crypto rates:', error.message);
+        // Fallback to defaults if API fails
+        return {
+            'BTC': 35000, 'ETH': 2000, 'SOL': 60, 'BNB': 250, 'XRP': 0.6,
+            'ADA': 0.35, 'DOGE': 0.07, 'TRX': 0.1, 'LTC': 70, 'DOT': 5
+        };
     }
 }
 
