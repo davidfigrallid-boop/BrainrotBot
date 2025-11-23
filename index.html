@@ -82,45 +82,25 @@
 
                 <div class="actions-bar">
                     <button class="btn btn-primary" onclick="openModal('brainrotModal')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Add Brainrot
-                    </button>
-                    <button class="btn btn-success" onclick="fetchBrainrots()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                        </svg>
-                        Refresh Brainrots
-                    </button>
-                </div>
-
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Rarity</th>
-                                <th>Mutation</th>
-                                <th>Income/s</th>
-                                <th>Price (€)</th>
-                                <th>Qty</th>
-                                <th>Owner</th>
-                                <th>Sold</th>
-                                <th>Actions</th>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Rarity</th>
+                            <th>Mutation</th>
+                            <th>Income/s</th>
+                            <th>Price (€)</th>
+                            <th>Qty</th>
+                            <th>Owner</th>
+                            <th>Sold</th>
+                            <th>Actions</th>
                             </tr>
-                        </thead>
-                        <tbody id="brainrots-table">
-                            <tr>
-                                <td colspan="10" style="text-align: center; padding: 2rem;">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody id="brainrots-table">
+                                <tr>
+                                    <td colspan="10" style="text-align: center; padding: 2rem;">Loading...</td>
+                                </tr>
+                            </tbody>
+                            </table>
                 </div>
             </section>
 

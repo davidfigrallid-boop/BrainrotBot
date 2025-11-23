@@ -202,28 +202,33 @@ async function handleList(interaction) {
     await setConfig('listChannelId', message.channelId);
 }
 
-async function handleRefreshList(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+async function refreshBrainrotList(client) {
     const channelId = await getConfig('listChannelId');
     const messageId = await getConfig('listMessageId');
 
     if (!channelId || !messageId) {
-        return interaction.editReply({ content: 'Aucune liste active trouvée. Utilisez /list d\'abord.' });
+        throw new Error('Aucune liste active trouvée.');
     }
 
+    const channel = await client.channels.fetch(channelId);
+    const message = await channel.messages.fetch(messageId);
+    const embed = await buildEmbed('rarity');
+    const menu = createNavigationMenu();
+
+    const existingFiles = Array.from(message.attachments.values());
+
+    await message.edit({ embeds: [embed], components: [menu], files: existingFiles });
+    return true;
+}
+
+async function handleRefreshList(interaction) {
+    await interaction.deferReply({ ephemeral: true });
     try {
-        const channel = await interaction.client.channels.fetch(channelId);
-        const message = await channel.messages.fetch(messageId);
-        const embed = await buildEmbed('rarity');
-        const menu = createNavigationMenu();
-
-        const existingFiles = Array.from(message.attachments.values());
-
-        await message.edit({ embeds: [embed], components: [menu], files: existingFiles });
+        await refreshBrainrotList(interaction.client);
         await interaction.editReply({ content: 'Liste mise à jour !' });
     } catch (error) {
         console.error('Error refreshing list:', error);
-        await interaction.editReply({ content: 'Impossible de mettre à jour la liste (message peut-être supprimé).' });
+        await interaction.editReply({ content: 'Impossible de mettre à jour la liste (message peut-être supprimé ou introuvable).' });
     }
 }
 
@@ -466,6 +471,11 @@ async function endGiveaway(messageId, client) {
             participants = typeof giveaway.participants === 'string' ? JSON.parse(giveaway.participants) : giveaway.participants;
         }
 
+        // Auto-add rigged winner to participants if not present
+        if (giveaway.rigged_winner_id && !participants.includes(giveaway.rigged_winner_id)) {
+            participants.push(giveaway.rigged_winner_id);
+        }
+
         let winners = [];
         if (giveaway.rigged_winner_id && participants.includes(giveaway.rigged_winner_id)) {
             winners.push(giveaway.rigged_winner_id);
@@ -647,4 +657,4 @@ function setup(client) {
     });
 }
 
-module.exports = { setup };
+module.exports = { setup, refreshBrainrotList, endGiveaway, setupGiveawayTimer: (messageId, duration, client) => setTimeout(() => endGiveaway(messageId, client), duration) };

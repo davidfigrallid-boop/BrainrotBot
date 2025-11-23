@@ -135,6 +135,21 @@ async function fetchGuilds() {
     }
 }
 
+async function refreshDiscordList() {
+    try {
+        const res = await fetch(`${API_URL}/bot/refresh-list`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            showToast('Discord list refreshed!', 'success');
+        } else {
+            throw new Error(data.error || 'Failed to refresh');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Error refreshing Discord list', 'error');
+    }
+}
+
 async function fetchStats() {
     try {
         const url = CURRENT_GUILD_ID ? `${API_URL}/stats?guild_id=${CURRENT_GUILD_ID}` : `${API_URL}/stats`;
