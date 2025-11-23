@@ -569,3 +569,104 @@ window.onclick = (e) => {
         e.target.style.display = 'none';
     }
 }
+
+// Import/Export JSON Functions
+function importBrainrotsJSON() {
+    document.getElementById('import-json-textarea').value = '';
+    openModal('importJsonModal');
+}
+
+async function processJSONImport() {
+    const jsonText = document.getElementById('import-json-textarea').value.trim();
+    
+    if (!jsonText) {
+        showToast('Veuillez coller du JSON', 'warning');
+        return;
+    }
+
+    try {
+        const brainrots = JSON.parse(jsonText);
+
+        if (!Array.isArray(brainrots)) {
+            throw new Error('Le JSON doit contenir un tableau de brainrots');
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const brainrot of brainrots) {
+            try {
+                const res = await fetch(`${API_URL}/brainrots`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(brainrot)
+                });
+
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    console.error(`Failed to import brainrot: ${brainrot.name}`);
+                }
+            } catch (e) {
+                errorCount++;
+                console.error(`Error importing brainrot: ${brainrot.name}`, e);
+            }
+        }
+
+        closeModal('importJsonModal');
+
+        if (successCount > 0) {
+            showToast(`${successCount} brainrot(s) importé(s) avec succès!`, 'success');
+            fetchBrainrots();
+            fetchStats();
+        }
+
+        if (errorCount > 0) {
+            showToast(`${errorCount} brainrot(s) n'ont pas pu être importés`, 'warning');
+        }
+
+    } catch (e) {
+        console.error('Error parsing JSON:', e);
+        showToast('Erreur: JSON invalide', 'error');
+    }
+}
+
+async function exportBrainrotsJSON() {
+    try {
+        const res = await fetch(`${API_URL}/brainrots`);
+        const brainrots = await res.json();
+
+        if (brainrots.length === 0) {
+            showToast('Aucun brainrot à exporter', 'warning');
+            return;
+        }
+
+        const jsonStr = JSON.stringify(brainrots, null, 2);
+        document.getElementById('export-json-textarea').value = jsonStr;
+        openModal('exportJsonModal');
+
+    } catch (e) {
+        console.error('Error exporting brainrots:', e);
+        showToast('Erreur lors de l\'export des brainrots', 'error');
+    }
+}
+
+function copyJSONToClipboard() {
+    const textarea = document.getElementById('export-json-textarea');
+    textarea.select();
+    textarea.setSelectionRange(0, 99999); // For mobile devices
+
+    try {
+        document.execCommand('copy');
+        showToast('JSON copié dans le presse-papier!', 'success');
+    } catch (e) {
+        // Fallback for modern browsers
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            showToast('JSON copié dans le presse-papier!', 'success');
+        }).catch(err => {
+            console.error('Error copying to clipboard:', err);
+            showToast('Erreur lors de la copie', 'error');
+        });
+    }
+}

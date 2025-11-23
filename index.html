@@ -108,6 +108,24 @@
                         </svg>
                         Refresh Discord List
                     </button>
+                    <button class="btn btn-secondary" onclick="importBrainrotsJSON()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Import JSON
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportBrainrotsJSON()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Export JSON
+                    </button>
                 </div>
 
                 <div class="table-container">
@@ -372,6 +390,53 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create
                     Giveaway</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Import JSON Modal -->
+    <div id="importJsonModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('importJsonModal')">&times;</span>
+            <h2>Import Brainrots JSON</h2>
+            <div class="form-group">
+                <label>Collez votre JSON ici</label>
+                <textarea id="import-json-textarea" rows="15" 
+                    style="width: 100%; padding: 1rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 0.9rem;"
+                    placeholder='[{"name": "Brainrot Name", "rarity": "Common", ...}]'></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="processJSONImport()" style="flex: 1;">
+                    Importer
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('importJsonModal')" style="flex: 1;">
+                    Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export JSON Modal -->
+    <div id="exportJsonModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('exportJsonModal')">&times;</span>
+            <h2>Export Brainrots JSON</h2>
+            <div class="form-group">
+                <label>Copiez le JSON ci-dessous</label>
+                <textarea id="export-json-textarea" rows="15" readonly
+                    style="width: 100%; padding: 1rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 0.9rem;"></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="copyJSONToClipboard()" style="flex: 1;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copier
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('exportJsonModal')" style="flex: 1;">
+                    Fermer
+                </button>
+            </div>
         </div>
     </div>
 
