@@ -1,4 +1,15 @@
 require('dotenv').config(); // Load env vars if .env exists (for local dev)
+
+// Polyfill for Node.js versions < 18
+if (!global.ReadableStream) {
+    try {
+        const { ReadableStream } = require('stream/web');
+        global.ReadableStream = ReadableStream;
+    } catch (e) {
+        console.warn('ReadableStream not available in this Node.js version. Please upgrade to Node.js 18+');
+    }
+}
+
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const express = require('express');
 const cors = require('cors');
