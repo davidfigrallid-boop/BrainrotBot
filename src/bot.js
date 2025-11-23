@@ -83,15 +83,15 @@ function formatBrainrotLine(br, crypto, showTraits = false) {
         cryptoPriceStr = formatCryptoPrice(br.price_crypto[crypto]);
     }
 
-    const quantiteDisplay = br.quantity > 1 ? ` \`x${br.quantity}\`` : '';
-    const mutationDisplay = br.mutation && br.mutation !== 'Default' ? ` **[${br.mutation}]**` : '';
+    const quantiteDisplay = br.quantity > 1 ? ` x${br.quantity}` : '';
+    const mutationDisplay = br.mutation && br.mutation !== 'Default' ? ` [${br.mutation}]` : '';
     const traitsDisplay = showTraits && br.traits && br.traits.length > 0
-        ? `\n✨ Traits: ${br.traits.join(', ')}`
+        ? ` {${br.traits.join(', ')}}`
         : '';
 
-    return `> **${br.name}** ${rarityColors[br.rarity] || ''}${mutationDisplay}${quantiteDisplay}\n` +
-        `\`💰 Price: €${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})\`\n` +
-        `\`📈 Income: ${formatPrice(parseFloat(br.income_per_second))}/s\`${traitsDisplay}\n`;
+    return `**${br.name}**${quantiteDisplay}${mutationDisplay}${traitsDisplay}\n` +
+        `├ Income: ${formatPrice(parseFloat(br.income_per_second))}/s\n` +
+        `├ Prix: €${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})\n\n`;
 }
 
 async function buildEmbed(viewMode = 'rarity') {
@@ -125,17 +125,17 @@ async function buildEmbed(viewMode = 'rarity') {
             grouped[br.rarity].push(br);
         });
         Object.keys(grouped).forEach(rarity => {
-            const itemsList = grouped[rarity].map(br => formatBrainrotLine(br, crypto, true)).join('\n');
+            const itemsList = grouped[rarity].map(br => formatBrainrotLine(br, crypto, true)).join('');
             embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}`, value: itemsList || '*Aucun*', inline: false });
         });
     } else if (viewMode === 'price_eur') {
         embed.setTitle('💰 Trié par Prix EUR');
         const sortedByPrice = [...sorted].sort((a, b) => b.price_eur - a.price_eur);
-        embed.setDescription(sortedByPrice.map(br => formatBrainrotLine(br, crypto, true)).join('\n') || '*Aucun*');
+        embed.setDescription(sortedByPrice.map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*');
     } else if (viewMode === 'income') {
         embed.setTitle('📈 Trié par Income');
         const sortedByIncome = [...sorted].sort((a, b) => b.income_per_second - a.income_per_second);
-        embed.setDescription(sortedByIncome.map(br => formatBrainrotLine(br, crypto, true)).join('\n') || '*Aucun*');
+        embed.setDescription(sortedByIncome.map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*');
     } else if (viewMode === 'mutations') {
         embed.setTitle('🧬 Trié par Mutation');
         const grouped = {};
@@ -145,7 +145,7 @@ async function buildEmbed(viewMode = 'rarity') {
             grouped[m].push(br);
         });
         Object.keys(grouped).sort().forEach(m => {
-            embed.addFields({ name: `🧬 ${m}`, value: grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('\n') || '*Aucun*', inline: false });
+            embed.addFields({ name: `🧬 ${m}`, value: grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*', inline: false });
         });
     } else if (viewMode === 'traits') {
         embed.setTitle('✨ Trié par Traits');
@@ -163,7 +163,7 @@ async function buildEmbed(viewMode = 'rarity') {
             }
         });
         Object.keys(grouped).sort().forEach(t => {
-            embed.addFields({ name: `✨ ${t}`, value: grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('\n') || '*Aucun*', inline: false });
+            embed.addFields({ name: `✨ ${t}`, value: grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*', inline: false });
         });
     }
 
@@ -188,6 +188,27 @@ async function handleList(interaction) {
     const message = await interaction.reply({ embeds: [embed], components: [buttons], fetchReply: true });
     await setConfig('listMessageId', message.id);
     await setConfig('listChannelId', message.channelId);
+}
+
+async function handleRefreshList(interaction) {
+    const channelId = await getConfig('listChannelId');
+    const messageId = await getConfig('listMessageId');
+
+    if (!channelId || !messageId) {
+        return interaction.reply({ content: 'Aucune liste active trouvée. Utilisez /list d\'abord.', ephemeral: true });
+    }
+
+    try {
+        const channel = await interaction.client.channels.fetch(channelId);
+        const message = await channel.messages.fetch(messageId);
+        const embed = await buildEmbed('rarity'); // Default to rarity view on refresh
+        const buttons = createNavigationButtons();
+        await message.edit({ embeds: [embed], components: [buttons] });
+        await interaction.reply({ content: 'Liste mise à jour !', ephemeral: true });
+    } catch (error) {
+        console.error('Error refreshing list:', error);
+        await interaction.reply({ content: 'Impossible de mettre à jour la liste (message peut-être supprimé).', ephemeral: true });
+    }
 }
 
 async function handleAddBrainrot(interaction) {
@@ -269,6 +290,7 @@ async function handleGiveawayCommand(interaction) {
         let durationMs = 0;
         if (durationStr.endsWith('m')) durationMs = parseInt(durationStr) * 60 * 1000;
         else if (durationStr.endsWith('h')) durationMs = parseInt(durationStr) * 60 * 60 * 1000;
+        else if (durationStr.endsWith('s')) durationMs = parseInt(durationStr) * 1000; // Added seconds support
         else durationMs = 60 * 1000;
 
         const endTime = new Date(Date.now() + durationMs);
@@ -328,7 +350,11 @@ async function endGiveaway(messageId, client) {
             .setColor(0x000000);
 
         await message.edit({ embeds: [endEmbed], components: [] });
-        if (winners.length > 0) await channel.send(`Congratulations ${winnerMentions}! You won **${giveaway.prize}**!`);
+        if (winners.length > 0) {
+            await channel.send(`Congratulations ${winnerMentions}! You won **${giveaway.prize}**!`);
+        } else {
+            await channel.send(`Giveaway ended for **${giveaway.prize}**. No winners.`);
+        }
     } catch (e) { console.error('Error ending giveaway:', e); }
 }
 
@@ -336,6 +362,7 @@ async function endGiveaway(messageId, client) {
 
 const commands = [
     new SlashCommandBuilder().setName('list').setDescription('List brainrots'),
+    new SlashCommandBuilder().setName('refreshlist').setDescription('Refresh the existing brainrot list'),
     new SlashCommandBuilder().setName('addbrainrot').setDescription('Add brainrot')
         .addStringOption(o => o.setName('name').setDescription('Name').setRequired(true))
         .addStringOption(o => o.setName('rarity').setDescription('Rarity').setRequired(true).addChoices(...Object.keys(rarityOrder).map(k => ({ name: k, value: k }))))
@@ -356,7 +383,7 @@ const commands = [
     new SlashCommandBuilder().setName('giveaway').setDescription('Manage Giveaways')
         .addSubcommand(sub => sub.setName('create').setDescription('Create giveaway')
             .addStringOption(o => o.setName('prize').setDescription('Prize').setRequired(true))
-            .addStringOption(o => o.setName('duration').setDescription('Duration').setRequired(true))
+            .addStringOption(o => o.setName('duration').setDescription('Duration (e.g. 1m, 1h, 30s)').setRequired(true))
             .addIntegerOption(o => o.setName('winners').setDescription('Winners').setRequired(true))
             .addUserOption(o => o.setName('rigged_user').setDescription('Rigged User')))
 ];
@@ -417,6 +444,7 @@ function setup(client) {
         } else if (interaction.isChatInputCommand()) {
             const { commandName } = interaction;
             if (commandName === 'list') await handleList(interaction);
+            else if (commandName === 'refreshlist') await handleRefreshList(interaction);
             else if (commandName === 'addbrainrot') await handleAddBrainrot(interaction);
             else if (commandName === 'removebrainrot') await handleRemoveBrainrot(interaction);
             else if (commandName === 'updatebrainrot') await handleUpdateBrainrot(interaction);
