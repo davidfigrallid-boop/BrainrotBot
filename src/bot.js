@@ -326,7 +326,7 @@ async function handleGiveawayCommand(interaction) {
             .addFields(
                 { name: 'Fin du giveaway', value: `<t:${Math.floor(endTime.getTime() / 1000)}:R>`, inline: false }
             )
-            .setTimestamp();
+            .setImage('attachment://giveway_banner.jpg')
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('join_giveaway').setLabel('🎉 Participer').setStyle(ButtonStyle.Primary)
@@ -409,7 +409,6 @@ async function handleGreroll(interaction) {
             { name: 'Gagnants', value: String(winners.length), inline: true },
             { name: '🏆 Nouveaux Gagnants', value: winnerMentions || 'Aucun', inline: false }
         )
-        .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
 
@@ -506,11 +505,6 @@ async function endGiveaway(messageId, client) {
                     { name: '🏆 Gagnants', value: winnerMentions, inline: false }
                 )
                 .setImage('attachment://giveway_banner.jpg')
-                .setTimestamp();
-
-            if (giveaway.rigged_winner_id) {
-                endEmbed.addFields({ name: '⚠️ Statut', value: 'Giveaway truqué', inline: false });
-            }
 
             const files = [];
             try {
