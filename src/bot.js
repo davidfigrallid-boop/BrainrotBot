@@ -126,7 +126,7 @@ async function buildEmbed(viewMode = 'rarity') {
         });
         Object.keys(grouped).forEach(rarity => {
             const itemsList = grouped[rarity].map(br => formatBrainrotLine(br, crypto, true)).join('');
-            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}`, value: '\n' + (itemsList || '*Aucun*') + '\n', inline: false });
+            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}`, value: '\n‎‎ \n' + (itemsList || '*Aucun*') + '\n‎‎ \n', inline: false });
         });
     } else if (viewMode === 'price_eur') {
         embed.setTitle('💰 Trié par Prix EUR');
@@ -145,7 +145,7 @@ async function buildEmbed(viewMode = 'rarity') {
             grouped[m].push(br);
         });
         Object.keys(grouped).sort().forEach(m => {
-            embed.addFields({ name: `🧬 ${m}`, value: '\n' + (grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n', inline: false });
+            embed.addFields({ name: `🧬 ${m}`, value: '\n‎‎ \n' + (grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n‎‎ \n', inline: false });
         });
     } else if (viewMode === 'traits') {
         embed.setTitle('✨ Trié par Traits');
@@ -163,7 +163,7 @@ async function buildEmbed(viewMode = 'rarity') {
             }
         });
         Object.keys(grouped).sort().forEach(t => {
-            embed.addFields({ name: `✨ ${t}`, value: '\n' + (grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n', inline: false });
+            embed.addFields({ name: `✨ ${t}`, value: '\n‎‎ \n' + (grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n‎‎ \n', inline: false });
         });
     }
 
@@ -325,47 +325,57 @@ async function handleGiveawayCommand(interaction) {
 }
 
 async function endGiveaway(messageId, client) {
-    const [result] = await pool.query('UPDATE giveaways SET ended = TRUE WHERE message_id = ? AND ended = FALSE', [messageId]);
-    if (result.affectedRows === 0) return;
-
-    const [rows] = await pool.query('SELECT * FROM giveaways WHERE message_id = ?', [messageId]);
-    const giveaway = rows[0];
-
-    let participants = [];
-    if (giveaway.participants) {
-        participants = typeof giveaway.participants === 'string' ? JSON.parse(giveaway.participants) : giveaway.participants;
-    }
-
-    let winners = [];
-    if (giveaway.rigged_winner_id && participants.includes(giveaway.rigged_winner_id)) {
-        winners.push(giveaway.rigged_winner_id);
-    }
-
-    const remainingSpots = giveaway.winners_count - winners.length;
-    const potentialWinners = participants.filter(p => !winners.includes(p));
-
-    for (let i = 0; i < remainingSpots; i++) {
-        if (potentialWinners.length === 0) break;
-        const randomIndex = Math.floor(Math.random() * potentialWinners.length);
-        winners.push(potentialWinners.splice(randomIndex, 1)[0]);
-    }
-
     try {
-        const channel = await client.channels.fetch(giveaway.channel_id);
-        const message = await channel.messages.fetch(giveaway.message_id);
-        const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
-        const endEmbed = new EmbedBuilder()
-            .setTitle('🎉 GIVEAWAY ENDED 🎉')
-            .setDescription(`Prize: **${giveaway.prize}**\nWinners: ${winnerMentions || 'No one'}`)
-            .setColor(0x000000);
+        const [result] = await pool.query('UPDATE giveaways SET ended = 1 WHERE message_id = ? AND ended = 0', [messageId]);
+        if (result.affectedRows === 0) return;
 
-        await message.edit({ embeds: [endEmbed], components: [] });
-        if (winners.length > 0) {
-            await channel.send(`Congratulations ${winnerMentions}! You won **${giveaway.prize}**!`);
-        } else {
-            await channel.send(`Giveaway ended for **${giveaway.prize}**. No winners.`);
+        const [rows] = await pool.query('SELECT * FROM giveaways WHERE message_id = ?', [messageId]);
+        const giveaway = rows[0];
+
+        let participants = [];
+        if (giveaway.participants) {
+            participants = typeof giveaway.participants === 'string' ? JSON.parse(giveaway.participants) : giveaway.participants;
         }
-    } catch (e) { console.error('Error ending giveaway:', e); }
+
+        let winners = [];
+        if (giveaway.rigged_winner_id && participants.includes(giveaway.rigged_winner_id)) {
+            winners.push(giveaway.rigged_winner_id);
+        }
+
+        const remainingSpots = giveaway.winners_count - winners.length;
+        const potentialWinners = participants.filter(p => !winners.includes(p));
+
+        for (let i = 0; i < remainingSpots; i++) {
+            if (potentialWinners.length === 0) break;
+            const randomIndex = Math.floor(Math.random() * potentialWinners.length);
+            winners.push(potentialWinners.splice(randomIndex, 1)[0]);
+        }
+
+        try {
+            const channel = await client.channels.fetch(giveaway.channel_id);
+            const message = await channel.messages.fetch(giveaway.message_id);
+            const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
+            const endEmbed = new EmbedBuilder()
+                .setTitle('🎉 GIVEAWAY ENDED 🎉')
+                .setDescription(`Prize: **${giveaway.prize}**\nWinners: ${winnerMentions || 'No one'}`)
+                .setColor(0x000000);
+
+            await message.edit({ embeds: [endEmbed], components: [] });
+            if (winners.length > 0) {
+                await channel.send(`Congratulations ${winnerMentions}! You won **${giveaway.prize}**!`);
+            } else {
+                await channel.send(`Giveaway ended for **${giveaway.prize}**. No winners.`);
+            }
+        } catch (e) {
+            if (e.code === 10008) { // Unknown Message
+                console.log(`Giveaway message ${messageId} not found, marking as ended.`);
+            } else {
+                console.error('Error ending giveaway:', e);
+            }
+        }
+    } catch (err) {
+        console.error('Critical error in endGiveaway:', err);
+    }
 }
 
 // --- Setup ---
@@ -423,7 +433,7 @@ function setup(client) {
         // Persistent Giveaway Checker
         setInterval(async () => {
             try {
-                const [rows] = await pool.query('SELECT * FROM giveaways WHERE ended = FALSE AND end_time <= NOW()');
+                const [rows] = await pool.query('SELECT * FROM giveaways WHERE ended = 0 AND end_time <= NOW()');
                 for (const giveaway of rows) {
                     await endGiveaway(giveaway.message_id, client);
                 }
