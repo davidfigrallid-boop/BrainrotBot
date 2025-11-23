@@ -3,6 +3,15 @@ let API_URL = localStorage.getItem('api_url') || '/api';
 let CURRENT_GUILD_ID = localStorage.getItem('current_guild_id') || null;
 const PASSWORD = 'Azerty123_';
 
+// Available Traits
+const AVAILABLE_TRAITS = [
+    'Bloodmoon', 'Taco', 'Galactic', 'Explosive', 'Bubblegum', 'Zombie', 'Glitch ed',
+    'Claws', 'Fireworks', 'Nyan', 'Fire', 'Rain', 'Snowy', 'Cometstruck', 'Disco',
+    'Water', 'TenB', 'Matteo Hat', 'Brazil Flag', 'Sleep', 'UFO', 'Mygame43',
+    'Spider', 'Strawberry', 'Extinct', 'Paint', 'Sombrero', 'Tie', 'Wizard Hat',
+    'Indonesia Flag', 'Meowl', 'Pumpkin', 'R.I.P.'
+];
+
 // Authentication
 function checkAuth() {
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -77,6 +86,7 @@ function initApp() {
         apiUrlInput.value = API_URL === '/api' ? window.location.origin + '/api' : API_URL;
     }
 
+    initTraitsCheckboxes();
     fetchGuilds();
     refreshDashboard();
     fetchBrainrots();
@@ -133,6 +143,13 @@ async function fetchStats() {
 
         document.getElementById('stat-brainrots').textContent = data.brainrots_count || 0;
         document.getElementById('stat-giveaways').textContent = data.giveaways_count || 0;
+
+        if (document.getElementById('stat-sold')) {
+            document.getElementById('stat-sold').textContent = data.sold_count || 0;
+        }
+        if (document.getElementById('stat-money')) {
+            document.getElementById('stat-money').textContent = `€${parseFloat(data.money_made || 0).toFixed(2)}`;
+        }
     } catch (e) {
         console.error('Error fetching stats:', e);
     }
@@ -142,6 +159,9 @@ async function fetchStats() {
         const data = await res.json();
         document.getElementById('stat-btc').textContent = `$${data.btc}`;
         document.getElementById('stat-eth').textContent = `$${data.eth}`;
+        if (document.getElementById('stat-ltc')) {
+            document.getElementById('stat-ltc').textContent = `$${data.ltc}`;
+        }
     } catch (e) {
         console.error('Error fetching crypto:', e);
     }
@@ -155,12 +175,13 @@ async function fetchBrainrots() {
         tbody.innerHTML = '';
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-muted);">No brainrots found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 2rem; color: var(--text-muted);">No brainrots found</td></tr>';
             return;
         }
 
         data.forEach(item => {
             const tr = document.createElement('tr');
+            const soldTitle = item.sold ? `Sold on ${new Date(item.sold_date).toLocaleDateString()} for €${item.sold_price}` : 'Available';
 
             tr.innerHTML = `
                 <td>${item.id}</td>
@@ -171,6 +192,12 @@ async function fetchBrainrots() {
                 <td>€${parseFloat(item.price_eur).toFixed(2)}</td>
                 <td><strong>${item.quantity}</strong></td>
                 <td>${item.owner_id || '-'}</td>
+                <td style="text-align: center;">
+                    <input type="checkbox" ${item.sold ? 'checked' : ''} 
+                           onchange="toggleSold(${item.id}, ${item.sold ? 'true' : 'false'})" 
+                           title="${soldTitle}"
+                           style="cursor: pointer; width: 18px; height: 18px;">
+                </td>
                 <td>
                     <div style="display: flex; gap: 0.5rem;">
                         <button class="btn btn-secondary" style="padding: 0.5rem 1rem;" onclick='editBrainrot(${JSON.stringify(item).replace(/'/g, "&#39;")})'>Edit</button>
@@ -255,6 +282,36 @@ async function deleteBrainrot(id) {
     }
 }
 
+async function toggleSold(id, currentlySold) {
+    try {
+        const sold = !currentlySold;
+        let sold_price = null;
+
+        if (sold) {
+            sold_price = prompt('Prix de vente (€):');
+            if (sold_price === null) return; // User cancelled
+            sold_price = parseFloat(sold_price) || 0;
+        }
+
+        const res = await fetch(`${API_URL}/brainrots/${id}/sold`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sold, sold_price })
+        });
+
+        if (res.ok) {
+            showToast(sold ? 'Brainrot marked as sold!' : 'Brainrot marked as available', 'success');
+            fetchBrainrots();
+            fetchStats();
+        } else {
+            throw new Error('Failed to update sold status');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Error updating sold status', 'error');
+    }
+}
+
 function editBrainrot(item) {
     document.getElementById('brainrot-id').value = item.id;
     document.getElementById('brainrot-name').value = item.name;
@@ -262,7 +319,15 @@ function editBrainrot(item) {
     document.getElementById('brainrot-mutation').value = item.mutation || 'Default';
     document.getElementById('brainrot-income').value = item.income_per_second;
     document.getElementById('brainrot-price').value = item.price_eur;
-    document.getElementById('brainrot-traits').value = Array.isArray(item.traits) ? item.traits.join(', ') : (item.traits || '');
+
+    // Reset and check traits
+    document.querySelectorAll('.trait-checkbox').forEach(cb => cb.checked = false);
+    const traits = Array.isArray(item.traits) ? item.traits : (item.traits ? [item.traits] : []);
+    traits.forEach(trait => {
+        const cb = document.querySelector(`.trait-checkbox[value="${trait}"]`);
+        if (cb) cb.checked = true;
+    });
+
     document.getElementById('brainrot-quantity').value = item.quantity || 1;
     document.getElementById('brainrot-owner').value = item.owner_id || '';
 
@@ -340,11 +405,7 @@ document.getElementById('addBrainrotForm').addEventListener('submit', async (e) 
     const data = Object.fromEntries(formData.entries());
 
     // Process traits
-    if (data.traits) {
-        data.traits = data.traits.split(',').map(t => t.trim()).filter(t => t);
-    } else {
-        data.traits = [];
-    }
+    data.traits = getSelectedTraits();
 
     const id = data.id;
     const method = id ? 'PUT' : 'POST';
@@ -362,6 +423,9 @@ document.getElementById('addBrainrotForm').addEventListener('submit', async (e) 
             e.target.reset();
             document.getElementById('brainrot-id').value = '';
             document.getElementById('brainrotModalTitle').textContent = 'Add New Brainrot';
+            // Reset checkboxes
+            document.querySelectorAll('.trait-checkbox').forEach(cb => cb.checked = false);
+
             showToast(id ? 'Brainrot updated!' : 'Brainrot added!', 'success');
             fetchBrainrots();
             fetchStats();
@@ -373,6 +437,24 @@ document.getElementById('addBrainrotForm').addEventListener('submit', async (e) 
         showToast('Error saving brainrot', 'error');
     }
 });
+
+// Traits Helper Functions
+function initTraitsCheckboxes() {
+    const container = document.getElementById('traits-checkboxes');
+    if (!container) return;
+
+    container.innerHTML = AVAILABLE_TRAITS.map(trait => `
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" value="${trait}" class="trait-checkbox" style="width: 16px; height: 16px;">
+            <span style="font-size: 0.9rem;">${trait}</span>
+        </label>
+    `).join('');
+}
+
+function getSelectedTraits() {
+    return Array.from(document.querySelectorAll('.trait-checkbox:checked'))
+        .map(cb => cb.value);
+}
 
 document.getElementById('createGiveawayForm').addEventListener('submit', async (e) => {
     e.preventDefault();

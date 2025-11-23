@@ -31,6 +31,9 @@ async function initDatabase() {
                 quantity INT DEFAULT 1,
                 owner_id VARCHAR(255),
                 image_url VARCHAR(512),
+                sold BOOLEAN DEFAULT FALSE,
+                sold_price DECIMAL(20, 2) DEFAULT NULL,
+                sold_date DATETIME DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -40,7 +43,15 @@ async function initDatabase() {
             await connection.query("ALTER TABLE brainrots MODIFY COLUMN price_crypto JSON");
         } catch (e) {
             // Ignore error if column is already JSON or other non-critical issue
-            // console.log('Migration note:', e.message);
+        }
+
+        // Add sold columns if they don't exist (migration)
+        try {
+            await connection.query("ALTER TABLE brainrots ADD COLUMN IF NOT EXISTS sold BOOLEAN DEFAULT FALSE");
+            await connection.query("ALTER TABLE brainrots ADD COLUMN IF NOT EXISTS sold_price DECIMAL(20, 2) DEFAULT NULL");
+            await connection.query("ALTER TABLE brainrots ADD COLUMN IF NOT EXISTS sold_date DATETIME DEFAULT NULL");
+        } catch (e) {
+            // Columns may already exist
         }
 
         // Create Giveaways table

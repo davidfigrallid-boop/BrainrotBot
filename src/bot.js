@@ -40,7 +40,7 @@ async function setConfig(key, value) {
 }
 
 async function getAllBrainrots() {
-    const [rows] = await pool.query('SELECT * FROM brainrots');
+    const [rows] = await pool.query('SELECT * FROM brainrots WHERE sold = FALSE');
     return rows.map(row => ({
         ...row,
         traits: typeof row.traits === 'string' ? JSON.parse(row.traits) : row.traits,

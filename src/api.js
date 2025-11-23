@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('./database');
-const { getCryptoRates } = require('./utils');
+const { getCryptoRates, parseDuration, formatDuration } = require('./utils');
 
 // --- Brainrots Endpoints ---
 
@@ -30,6 +30,7 @@ router.post('/brainrots', async (req, res) => {
         const price_crypto = {
             BTC: price_eur / rates.BTC,
             ETH: price_eur / rates.ETH,
+            LTC: price_eur / rates.LTC,
             SOL: price_eur / rates.SOL
         };
 
@@ -55,6 +56,7 @@ router.put('/brainrots/:id', async (req, res) => {
         const price_crypto = {
             BTC: price_eur / rates.BTC,
             ETH: price_eur / rates.ETH,
+            LTC: price_eur / rates.LTC,
             SOL: price_eur / rates.SOL
         };
 
@@ -67,6 +69,27 @@ router.put('/brainrots/:id', async (req, res) => {
     } catch (error) {
         console.error('Error updating brainrot:', error);
         res.status(500).json({ error: 'Failed to update brainrot' });
+    }
+});
+
+// PATCH /api/brainrots/:id/sold - Toggle sold status
+router.patch('/brainrots/:id/sold', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { sold, sold_price } = req.body;
+
+        const sold_date = sold ? new Date() : null;
+        const price = sold ? sold_price : null;
+
+        await pool.query(
+            'UPDATE brainrots SET sold = ?, sold_price = ?, sold_date = ? WHERE id = ?',
+            [sold, price, sold_date, id]
+        );
+
+        res.json({ success: true, message: 'Brainrot sold status updated' });
+    } catch (error) {
+        console.error('Error updating sold status:', error);
+        res.status(500).json({ error: 'Failed to update sold status' });
     }
 });
 
@@ -134,17 +157,74 @@ router.post('/giveaways', async (req, res) => {
         }
 
         const client = req.client;
-        const channel = await client.channels.fetch(channel_id);
+        const targetChannel = await client.channels.fetch(channel_id);
 
-        if (!channel) {
+        if (!targetChannel) {
             return res.status(404).json({ error: 'Channel not found' });
         }
 
-        // TODO: Invoke bot command to create giveaway
-        res.json({ success: true, message: 'Giveaway creation initiated' });
+        // Parse duration
+        const durationMs = parseDuration(duration);
+
+        if (durationMs < 60000) {
+            return res.status(400).json({ error: 'Minimum duration is 1 minute' });
+        }
+
+        const endTime = new Date(Date.now() + durationMs);
+        const formattedDuration = formatDuration(durationMs);
+        const winnersCount = parseInt(winners) || 1;
+
+        // Create embed
+        const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+        const fs = require('fs').promises;
+        const path = require('path');
+
+        const embed = new EmbedBuilder()
+            .setTitle(`🎉 Nouveau Giveaway: ${prize} 🎉`)
+            .setDescription(`Gagnants: ${winnersCount}  |  Durée: ${formattedDuration}  |  Participants: 0`)
+            .setColor(0x7B2CBF)
+            .addFields(
+                { name: 'Fin du giveaway', value: `<t:${Math.floor(endTime.getTime() / 1000)}:R>`, inline: false }
+            )
+            .setTimestamp();
+
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('join_giveaway').setLabel('🎉 Participer').setStyle(ButtonStyle.Primary)
+        );
+
+        const files = [];
+        try {
+            const imagePath = path.join(__dirname, '../giveway_banner.jpg');
+            await fs.access(imagePath);
+            files.push(imagePath);
+        } catch (e) {
+            // Image not found, continue without it
+        }
+
+        const message = await targetChannel.send({ embeds: [embed], components: [row], files: files });
+
+        // Save to database
+        await pool.query(
+            'INSERT INTO giveaways (message_id, channel_id, guild_id, prize, winners_count, end_time, rigged_winner_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [message.id, channel_id, guild_id, prize, winnersCount, endTime, rigged_user || null]
+        );
+
+        // Set up automatic end timer
+        setTimeout(async () => {
+            try {
+                const { endGiveaway } = require('./bot');
+                if (endGiveaway) {
+                    await endGiveaway(message.id, client);
+                }
+            } catch (e) {
+                console.error('Error auto-ending giveaway:', e);
+            }
+        }, durationMs);
+
+        res.json({ success: true, message: 'Giveaway created successfully', message_id: message.id });
     } catch (error) {
         console.error('Error creating giveaway:', error);
-        res.status(500).json({ error: 'Failed to create giveaway' });
+        res.status(500).json({ error: 'Failed to create giveaway: ' + error.message });
     }
 });
 
@@ -152,7 +232,7 @@ router.post('/giveaways', async (req, res) => {
 router.post('/giveaways/:id/end', async (req, res) => {
     try {
         const { id } = req.params;
-        const { winner, channel_id } = req.body;
+        const { winner } = req.body;
 
         const [rows] = await pool.query('SELECT * FROM giveaways WHERE id = ?', [id]);
 
@@ -220,10 +300,10 @@ router.post('/giveaways/:id/reroll', async (req, res) => {
 
         try {
             const client = req.client;
-            const channel = await client.channels.fetch(channel_id || giveaway.channel_id);
+            const rerollChannel = await client.channels.fetch(channel_id || giveaway.channel_id);
             const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
 
-            await channel.send(`🔄 Reroll pour **${giveaway.prize}**! Félicitations à ${winnerMentions}!`);
+            await rerollChannel.send(`🔄 Reroll pour **${giveaway.prize}**! Félicitations à ${winnerMentions}!`);
         } catch (e) {
             console.error('Error sending reroll message:', e);
         }
@@ -255,6 +335,7 @@ router.get('/stats', async (req, res) => {
         const { guild_id } = req.query;
 
         const [brainrots] = await pool.query('SELECT COUNT(*) as count FROM brainrots');
+        const [sold] = await pool.query('SELECT COUNT(*) as count, SUM(sold_price) as total FROM brainrots WHERE sold = TRUE');
 
         let giveawaysQuery = 'SELECT COUNT(*) as count FROM giveaways WHERE ended = 0';
         const params = [];
@@ -268,7 +349,9 @@ router.get('/stats', async (req, res) => {
 
         res.json({
             brainrots_count: brainrots[0].count,
-            giveaways_count: giveaways[0].count
+            giveaways_count: giveaways[0].count,
+            sold_count: sold[0].count || 0,
+            money_made: sold[0].total || 0
         });
     } catch (error) {
         console.error('Error fetching stats:', error);
@@ -283,6 +366,7 @@ router.get('/crypto', async (req, res) => {
         res.json({
             btc: rates.BTC.toFixed(2),
             eth: rates.ETH.toFixed(2),
+            ltc: rates.LTC.toFixed(2),
             sol: rates.SOL.toFixed(2)
         });
     } catch (error) {
