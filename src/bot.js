@@ -126,7 +126,7 @@ async function buildEmbed(viewMode = 'rarity') {
         });
         Object.keys(grouped).forEach(rarity => {
             const itemsList = grouped[rarity].map(br => formatBrainrotLine(br, crypto, true)).join('');
-            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}`, value: itemsList || '*Aucun*', inline: false });
+            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}`, value: '\n' + (itemsList || '*Aucun*') + '\n', inline: false });
         });
     } else if (viewMode === 'price_eur') {
         embed.setTitle('💰 Trié par Prix EUR');
@@ -145,7 +145,7 @@ async function buildEmbed(viewMode = 'rarity') {
             grouped[m].push(br);
         });
         Object.keys(grouped).sort().forEach(m => {
-            embed.addFields({ name: `🧬 ${m}`, value: grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*', inline: false });
+            embed.addFields({ name: `🧬 ${m}`, value: '\n' + (grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n', inline: false });
         });
     } else if (viewMode === 'traits') {
         embed.setTitle('✨ Trié par Traits');
@@ -163,7 +163,7 @@ async function buildEmbed(viewMode = 'rarity') {
             }
         });
         Object.keys(grouped).sort().forEach(t => {
-            embed.addFields({ name: `✨ ${t}`, value: grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*', inline: false });
+            embed.addFields({ name: `✨ ${t}`, value: '\n' + (grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '\n', inline: false });
         });
     }
 
@@ -320,17 +320,16 @@ async function handleGiveawayCommand(interaction) {
             [message.id, interaction.channelId, interaction.guildId, prize, winnersCount, endTime, riggedUser ? riggedUser.id : null]
         );
 
-        // Giveaway ending is handled by persistent loop, but for short duration we can keep a timeout as backup or for immediate feedback if < 10s
-        // But persistent loop is safer.
+        setTimeout(() => endGiveaway(message.id, interaction.client), durationMs);
     }
 }
 
 async function endGiveaway(messageId, client) {
-    const [rows] = await pool.query('SELECT * FROM giveaways WHERE message_id = ? AND ended = FALSE', [messageId]);
-    if (rows.length === 0) return;
+    const [result] = await pool.query('UPDATE giveaways SET ended = TRUE WHERE message_id = ? AND ended = FALSE', [messageId]);
+    if (result.affectedRows === 0) return;
 
+    const [rows] = await pool.query('SELECT * FROM giveaways WHERE message_id = ?', [messageId]);
     const giveaway = rows[0];
-    await pool.query('UPDATE giveaways SET ended = TRUE WHERE id = ?', [giveaway.id]);
 
     let participants = [];
     if (giveaway.participants) {
