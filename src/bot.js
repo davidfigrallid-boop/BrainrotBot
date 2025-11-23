@@ -1,6 +1,6 @@
 const { REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, PermissionFlagsBits } = require('discord.js');
 const { pool } = require('./database');
-const { parsePrice, formatPrice, formatCryptoPrice, convertEURToAllCryptos, getSupportedCryptos, getCryptoRates } = require('./utils');
+const { parsePrice, formatPrice, formatCryptoPrice, convertEURToAllCryptos, getSupportedCryptos, getCryptoRates, parseDuration, formatDuration } = require('./utils');
 
 // --- Constants ---
 const rarityOrder = {
@@ -89,7 +89,8 @@ function formatBrainrotLine(br, crypto, showTraits = false) {
         ? ` {${br.traits.join(', ')}}`
         : '';
 
-    return `**${br.name}**${quantiteDisplay}${mutationDisplay}${traitsDisplay}\n` +
+    // ### Otmane x3 *[Celestial] {Taco, BubbleGum}*
+    return `### ${br.name}${quantiteDisplay} *${mutationDisplay}${traitsDisplay}*\n` +
         `├ Income: **${formatPrice(parseFloat(br.income_per_second))}/s**\n` +
         `├ Prix: **€${formatPrice(parseFloat(br.price_eur))} (${cryptoPriceStr} ${crypto})**\n\n`;
 }
@@ -126,7 +127,7 @@ async function buildEmbed(viewMode = 'rarity') {
         });
         Object.keys(grouped).forEach(rarity => {
             const itemsList = grouped[rarity].map(br => formatBrainrotLine(br, crypto, true)).join('');
-            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}:`, value: '\n‎‎ \n' + (itemsList || '*Aucun*') + '‎‎', inline: false });
+            embed.addFields({ name: `${rarityColors[rarity] || '📦'} ${rarity}:`, value: itemsList || '*Aucun*', inline: false });
         });
     } else if (viewMode === 'price_eur') {
         embed.setTitle('💰 Trié par Prix EUR');
@@ -145,7 +146,7 @@ async function buildEmbed(viewMode = 'rarity') {
             grouped[m].push(br);
         });
         Object.keys(grouped).sort().forEach(m => {
-            embed.addFields({ name: `🧬 ${m}:`, value: '\n‎‎ \n' + (grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '‎‎', inline: false });
+            embed.addFields({ name: `🧬 ${m}:`, value: grouped[m].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*', inline: false });
         });
     } else if (viewMode === 'traits') {
         embed.setTitle('✨ Trié par Traits');
@@ -163,7 +164,7 @@ async function buildEmbed(viewMode = 'rarity') {
             }
         });
         Object.keys(grouped).sort().forEach(t => {
-            embed.addFields({ name: `✨ ${t}:`, value: '\n‎‎ \n' + (grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*') + '‎‎', inline: false });
+            embed.addFields({ name: `✨ ${t}:`, value: grouped[t].map(br => formatBrainrotLine(br, crypto, true)).join('') || '*Aucun*', inline: false });
         });
     }
 
@@ -191,7 +192,14 @@ async function handleList(interaction) {
     await interaction.deferReply();
     const embed = await buildEmbed('rarity');
     const menu = createNavigationMenu();
-    const message = await interaction.editReply({ embeds: [embed], components: [menu] });
+
+    // Attach image for /list (displayed above/outside embed)
+    const files = [];
+    try {
+        files.push('./brainrot_market.png');
+    } catch (e) { console.error('Image not found:', e); }
+
+    const message = await interaction.editReply({ embeds: [embed], components: [menu], files: files });
     await setConfig('listMessageId', message.id);
     await setConfig('listChannelId', message.channelId);
 }
@@ -210,7 +218,11 @@ async function handleRefreshList(interaction) {
         const message = await channel.messages.fetch(messageId);
         const embed = await buildEmbed('rarity'); // Default to rarity view on refresh
         const menu = createNavigationMenu();
-        await message.edit({ embeds: [embed], components: [menu] });
+
+        // Keep existing files (banner)
+        const existingFiles = Array.from(message.attachments.values());
+
+        await message.edit({ embeds: [embed], components: [menu], files: existingFiles });
         await interaction.editReply({ content: 'Liste mise à jour !' });
     } catch (error) {
         console.error('Error refreshing list:', error);
@@ -291,41 +303,166 @@ async function handleShowCompte(interaction) {
 async function handleGiveawayCommand(interaction) {
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === 'create') {
-        await interaction.deferReply(); // Fix timeout
+        await interaction.deferReply();
         const prize = interaction.options.getString('prize');
         const durationStr = interaction.options.getString('duration');
         const winnersCount = interaction.options.getInteger('winners');
-        const riggedUser = interaction.options.getUser('rigged_user');
 
-        let durationMs = 0;
-        if (durationStr.endsWith('m')) durationMs = parseInt(durationStr) * 60 * 1000;
-        else if (durationStr.endsWith('h')) durationMs = parseInt(durationStr) * 60 * 60 * 1000;
-        else if (durationStr.endsWith('s')) durationMs = parseInt(durationStr) * 1000;
-        else durationMs = 60 * 1000;
+        const durationMs = parseDuration(durationStr);
+        if (durationMs < 60000) {
+            return interaction.editReply('❌ La durée minimale est 1 minute (ex: 1m, 1h).');
+        }
 
         const endTime = new Date(Date.now() + durationMs);
+        const formattedDuration = formatDuration(durationMs);
+
         const embed = new EmbedBuilder()
-            .setTitle('🎉 GIVEAWAY 🎉')
-            .setDescription(`Prize: **${prize}**\nWinners: ${winnersCount}\nEnds: <t:${Math.floor(endTime.getTime() / 1000)}:R>`)
-            .setColor(0xFF0000);
+            .setTitle('🎉 Nouveau Giveaway!')
+            .setDescription(`**Prix:** ${prize}\n**Gagnants:** ${winnersCount}\n**Durée:** ${formattedDuration}`)
+            .setColor(0x7B2CBF)
+            .addFields(
+                { name: 'Participants', value: '0', inline: true },
+                { name: 'Fin du giveaway', value: `<t:${Math.floor(endTime.getTime() / 1000)}:R>`, inline: false }
+            )
+            .setImage('attachment://giveway_banner.jpg')
+            .setTimestamp();
 
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('join_giveaway').setLabel('Participate').setStyle(ButtonStyle.Primary)
+            new ButtonBuilder().setCustomId('join_giveaway').setLabel('🎉 Participer').setStyle(ButtonStyle.Primary)
         );
 
-        const message = await interaction.editReply({ embeds: [embed], components: [row] });
+        const files = [];
+        try {
+            files.push('./giveway_banner.jpg');
+        } catch (e) { console.error('Image not found:', e); }
+
+        const message = await interaction.editReply({ embeds: [embed], components: [row], files: files });
 
         await pool.query(
-            'INSERT INTO giveaways (message_id, channel_id, guild_id, prize, winners_count, end_time, rigged_winner_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [message.id, interaction.channelId, interaction.guildId, prize, winnersCount, endTime, riggedUser ? riggedUser.id : null]
+            'INSERT INTO giveaways (message_id, channel_id, guild_id, prize, winners_count, end_time) VALUES (?, ?, ?, ?, ?, ?)',
+            [message.id, interaction.channelId, interaction.guildId, prize, winnersCount, endTime]
         );
+
+        // Update embed with ID
+        const [rows] = await pool.query('SELECT id FROM giveaways WHERE message_id = ?', [message.id]);
+        const giveawayId = rows[0].id;
+        embed.addFields({ name: 'ID', value: String(giveawayId), inline: true });
+
+        // Update button ID to include giveaway ID for safety (legacy style)
+        const newRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`giveaway_join_${giveawayId}`).setLabel('🎉 Participer').setStyle(ButtonStyle.Primary)
+        );
+
+        await message.edit({ embeds: [embed], components: [newRow] });
 
         setTimeout(() => endGiveaway(message.id, interaction.client), durationMs);
     }
 }
 
+async function handleGend(interaction) {
+    await interaction.deferReply();
+    const id = interaction.options.getInteger('id');
+    const winner = interaction.options.getUser('winner');
+
+    const [rows] = await pool.query('SELECT * FROM giveaways WHERE id = ?', [id]);
+    if (rows.length === 0) return interaction.editReply('❌ Giveaway introuvable.');
+
+    const giveaway = rows[0];
+    if (giveaway.ended) return interaction.editReply('❌ Ce giveaway est déjà terminé.');
+
+    if (winner) {
+        await pool.query('UPDATE giveaways SET rigged_winner_id = ? WHERE id = ?', [winner.id, id]);
+    }
+
+    await endGiveaway(giveaway.message_id, interaction.client);
+    await interaction.editReply(`✅ Giveaway #${id} terminé manuellement.`);
+}
+
+async function handleGreroll(interaction) {
+    await interaction.deferReply();
+    const id = interaction.options.getInteger('id');
+
+    const [rows] = await pool.query('SELECT * FROM giveaways WHERE id = ?', [id]);
+    if (rows.length === 0) return interaction.editReply('❌ Giveaway introuvable.');
+
+    const giveaway = rows[0];
+    if (!giveaway.ended) return interaction.editReply('❌ Ce giveaway n\'est pas encore terminé.');
+
+    let participants = giveaway.participants ? (typeof giveaway.participants === 'string' ? JSON.parse(giveaway.participants) : giveaway.participants) : [];
+    if (participants.length === 0) return interaction.editReply('❌ Aucun participant.');
+
+    const winners = [];
+    const potentialWinners = [...participants];
+
+    for (let i = 0; i < giveaway.winners_count; i++) {
+        if (potentialWinners.length === 0) break;
+        const randomIndex = Math.floor(Math.random() * potentialWinners.length);
+        winners.push(potentialWinners.splice(randomIndex, 1)[0]);
+    }
+
+    const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
+
+    const embed = new EmbedBuilder()
+        .setColor(0x00FFFF)
+        .setTitle('🔄 Gagnants Resélectionnés!')
+        .addFields(
+            { name: 'Prix', value: giveaway.prize, inline: true },
+            { name: 'Gagnants', value: String(winners.length), inline: true },
+            { name: '🏆 Nouveaux Gagnants', value: winnerMentions || 'Aucun', inline: false }
+        )
+        .setTimestamp();
+
+    await interaction.editReply({ embeds: [embed] });
+
+    // Announce in channel
+    try {
+        const channel = await interaction.client.channels.fetch(giveaway.channel_id);
+        await channel.send(`🔄 Reroll pour **${giveaway.prize}**! Félicitations à ${winnerMentions}!`);
+    } catch (e) { console.error('Error announcing reroll:', e); }
+}
+
+async function handleGlist(interaction) {
+    await interaction.deferReply();
+    const status = interaction.options.getString('status');
+
+    let query = 'SELECT * FROM giveaways';
+    const params = [];
+
+    if (status === 'active') {
+        query += ' WHERE ended = 0';
+    } else if (status === 'ended') {
+        query += ' WHERE ended = 1';
+    }
+
+    query += ' ORDER BY created_at DESC LIMIT 10';
+
+    const [rows] = await pool.query(query, params);
+
+    if (rows.length === 0) return interaction.editReply('❌ Aucun giveaway trouvé.');
+
+    const embed = new EmbedBuilder()
+        .setColor(0x7B2CBF)
+        .setTitle(`🎉 Giveaways (${status || 'Tous'})`)
+        .setTimestamp();
+
+    rows.forEach(g => {
+        const state = g.ended ? '✅ Terminé' : '🔄 Actif';
+        const time = g.ended ? 'Terminé' : `<t:${Math.floor(new Date(g.end_time).getTime() / 1000)}:R>`;
+        const partCount = g.participants ? (typeof g.participants === 'string' ? JSON.parse(g.participants).length : g.participants.length) : 0;
+
+        embed.addFields({
+            name: `${g.prize} (ID: ${g.id})`,
+            value: `**Statut:** ${state}\n**Gagnants:** ${g.winners_count}\n**Participants:** ${partCount}\n**Fin:** ${time}`,
+            inline: false
+        });
+    });
+
+    await interaction.editReply({ embeds: [embed] });
+}
+
 async function endGiveaway(messageId, client) {
     try {
+        // Atomic update to mark as ended and prevent race conditions
         const [result] = await pool.query('UPDATE giveaways SET ended = 1 WHERE message_id = ? AND ended = 0', [messageId]);
         if (result.affectedRows === 0) return;
 
@@ -338,6 +475,7 @@ async function endGiveaway(messageId, client) {
         }
 
         let winners = [];
+        // Rigged winner logic
         if (giveaway.rigged_winner_id && participants.includes(giveaway.rigged_winner_id)) {
             winners.push(giveaway.rigged_winner_id);
         }
@@ -345,6 +483,7 @@ async function endGiveaway(messageId, client) {
         const remainingSpots = giveaway.winners_count - winners.length;
         const potentialWinners = participants.filter(p => !winners.includes(p));
 
+        // Random selection
         for (let i = 0; i < remainingSpots; i++) {
             if (potentialWinners.length === 0) break;
             const randomIndex = Math.floor(Math.random() * potentialWinners.length);
@@ -354,13 +493,33 @@ async function endGiveaway(messageId, client) {
         try {
             const channel = await client.channels.fetch(giveaway.channel_id);
             const message = await channel.messages.fetch(giveaway.message_id);
-            const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
-            const endEmbed = new EmbedBuilder()
-                .setTitle('🎉 GIVEAWAY ENDED 🎉')
-                .setDescription(`Prize: **${giveaway.prize}**\nWinners: ${winnerMentions || 'No one'}`)
-                .setColor(0x000000);
 
-            await message.edit({ embeds: [endEmbed], components: [] });
+            const winnerMentions = winners.length > 0 ? winners.map(id => `<@${id}>`).join(', ') : 'No one';
+
+            const endEmbed = new EmbedBuilder()
+                .setTitle('✅ Giveaway Terminé!')
+                .setColor(0x00FF00)
+                .addFields(
+                    { name: 'Prix', value: giveaway.prize, inline: true },
+                    { name: 'Gagnants', value: String(winners.length), inline: true },
+                    { name: 'Participants', value: String(participants.length), inline: true },
+                    { name: '🏆 Gagnants', value: winnerMentions, inline: false }
+                )
+                .setImage('attachment://giveway_banner.jpg')
+                .setTimestamp();
+
+            if (giveaway.rigged_winner_id) {
+                endEmbed.addFields({ name: '⚠️ Statut', value: 'Giveaway truqué', inline: false });
+            }
+
+            // Re-attach the image for the ended message
+            const files = [];
+            try {
+                files.push('./giveway_banner.jpg');
+            } catch (e) { console.error('Image not found:', e); }
+
+            await message.edit({ embeds: [endEmbed], components: [], files: files });
+
             if (winners.length > 0) {
                 await channel.send(`Congratulations ${winnerMentions}! You won **${giveaway.prize}**!`);
             } else {
@@ -404,8 +563,14 @@ const commands = [
         .addSubcommand(sub => sub.setName('create').setDescription('Create giveaway')
             .addStringOption(o => o.setName('prize').setDescription('Prize').setRequired(true))
             .addStringOption(o => o.setName('duration').setDescription('Duration (e.g. 1m, 1h, 30s)').setRequired(true))
-            .addIntegerOption(o => o.setName('winners').setDescription('Winners').setRequired(true))
-            .addUserOption(o => o.setName('rigged_user').setDescription('Rigged User')))
+            .addIntegerOption(o => o.setName('winners').setDescription('Winners').setRequired(true))),
+    new SlashCommandBuilder().setName('gend').setDescription('End a giveaway manually')
+        .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true))
+        .addUserOption(o => o.setName('winner').setDescription('Force winner')),
+    new SlashCommandBuilder().setName('greroll').setDescription('Reroll giveaway winners')
+        .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true)),
+    new SlashCommandBuilder().setName('glist').setDescription('List giveaways')
+        .addStringOption(o => o.setName('status').setDescription('Filter status').addChoices({ name: 'Active', value: 'active' }, { name: 'Ended', value: 'ended' }))
 ];
 
 async function registerCommands(client) {
@@ -450,17 +615,27 @@ function setup(client) {
                 await interaction.editReply({ embeds: [embed] });
             }
         } else if (interaction.isButton()) {
-            if (interaction.customId === 'join_giveaway') {
+            if (interaction.customId.startsWith('giveaway_join_') || interaction.customId === 'join_giveaway') {
                 const [rows] = await pool.query('SELECT * FROM giveaways WHERE message_id = ?', [interaction.message.id]);
                 if (rows.length > 0) {
                     const giveaway = rows[0];
+                    if (giveaway.ended) return interaction.reply({ content: '❌ Ce giveaway est terminé.', ephemeral: true });
+
                     let participants = giveaway.participants ? (typeof giveaway.participants === 'string' ? JSON.parse(giveaway.participants) : giveaway.participants) : [];
                     if (!participants.includes(interaction.user.id)) {
                         participants.push(interaction.user.id);
                         await pool.query('UPDATE giveaways SET participants = ? WHERE id = ?', [JSON.stringify(participants), giveaway.id]);
-                        await interaction.reply({ content: 'You joined the giveaway!', ephemeral: true });
+
+                        // Update embed participant count
+                        const embed = EmbedBuilder.from(interaction.message.embeds[0]);
+                        const fields = embed.data.fields;
+                        const partField = fields.find(f => f.name === 'Participants');
+                        if (partField) partField.value = String(participants.length);
+
+                        await interaction.message.edit({ embeds: [embed] });
+                        await interaction.reply({ content: '🎉 Participation enregistrée !', ephemeral: true });
                     } else {
-                        await interaction.reply({ content: 'You are already participating.', ephemeral: true });
+                        await interaction.reply({ content: '⚠️ Vous participez déjà.', ephemeral: true });
                     }
                 }
             }
@@ -477,6 +652,9 @@ function setup(client) {
                 await setConfig('defaultCrypto', crypto);
                 await interaction.reply(`Default crypto set to ${crypto}`);
             } else if (commandName === 'giveaway') await handleGiveawayCommand(interaction);
+            else if (commandName === 'gend') await handleGend(interaction);
+            else if (commandName === 'greroll') await handleGreroll(interaction);
+            else if (commandName === 'glist') await handleGlist(interaction);
         }
     });
 }

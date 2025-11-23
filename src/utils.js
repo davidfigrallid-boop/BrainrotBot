@@ -80,11 +80,44 @@ function getSupportedCryptos() {
     return SUPPORTED_CRYPTOS;
 }
 
+// --- Time Parser ---
+
+function parseDuration(str) {
+    if (!str) return 0;
+    const match = /^(\d+)\s*([a-zA-Z]+)$/.exec(str.toString().trim());
+    if (!match) return 0;
+    const [, num, unit] = match;
+    const n = parseInt(num);
+
+    switch (unit.toLowerCase()) {
+        case 's': case 'sec': case 'seconds': return n * 1000;
+        case 'm': case 'min': case 'minutes': return n * 60 * 1000;
+        case 'h': case 'hour': case 'hours': return n * 60 * 60 * 1000;
+        case 'd': case 'j': case 'day': case 'days': return n * 24 * 60 * 60 * 1000;
+        case 'w': case 'sem': case 'week': case 'weeks': return n * 7 * 24 * 60 * 60 * 1000;
+        default: return 0;
+    }
+}
+
+function formatDuration(ms) {
+    if (ms < 1000) return `${ms}ms`;
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    return `${days}j`;
+}
+
 module.exports = {
     parsePrice,
     formatPrice,
     formatCryptoPrice,
     convertEURToAllCryptos,
     getSupportedCryptos,
-    getCryptoRates
+    getCryptoRates,
+    parseDuration,
+    formatDuration
 };
