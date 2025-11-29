@@ -556,18 +556,6 @@ const commands = [
         .addStringOption(o => o.setName('name').setDescription('Name').setRequired(true))
         .addStringOption(o => o.setName('price_eur').setDescription('New Price EUR')),
     new SlashCommandBuilder().setName('setcrypto').setDescription('Set default crypto')
-        .addStringOption(o => o.setName('crypto').setDescription('Crypto').setRequired(true).addChoices(...getSupportedCryptos().map(c => ({ name: c, value: c })))),
-    new SlashCommandBuilder().setName('showcompte').setDescription('Show by account'),
-    new SlashCommandBuilder().setName('giveaway').setDescription('Manage Giveaways')
-        .addSubcommand(sub => sub.setName('create').setDescription('Create giveaway')
-            .addStringOption(o => o.setName('prize').setDescription('Premio').setRequired(true))
-            .addStringOption(o => o.setName('du ration').setDescription('Duration (e.g. 1m, 1h, 30s)').setRequired(true))
-            .addIntegerOption(o => o.setName('winners').setDescription('Winners').setRequired(true))
-            .addUserOption(o => o.setName('rigged_user').setDescription('Force this user to win'))),
-    new SlashCommandBuilder().setName('gend').setDescription('End a giveaway manually')
-        .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true))
-        .addUserOption(o => o.setName('winner').setDescription('Force winner')),
-    new SlashCommandBuilder().setName('greroll').setDescription('Reroll giveaway winners')
         .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true)),
     new SlashCommandBuilder().setName('glist').setDescription('List giveaways')
         .addStringOption(o => o.setName('status').setDescription('Filter status').addChoices({ name: 'Active', value: 'active' }, { name: 'Ended', value: 'ended' })),
