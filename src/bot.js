@@ -552,6 +552,36 @@ const commands = [
         .addIntegerOption(o => o.setName('quantite').setDescription('Quantity')),
     new SlashCommandBuilder().setName('removebrainrot').setDescription('Remove brainrot')
         .addStringOption(o => o.setName('name').setDescription('Name').setRequired(true)),
+    new SlashCommandBuilder().setName('updatebrainrot').setDescription('Update brainrot price')
+        .addStringOption(o => o.setName('name').setDescription('Name').setRequired(true))
+        .addStringOption(o => o.setName('price_eur').setDescription('New price in EUR')),
+    new SlashCommandBuilder().setName('showcompte').setDescription('Show brainrots grouped by account'),
+    new SlashCommandBuilder().setName('setcrypto').setDescription('Set default cryptocurrency')
+        .addStringOption(o => o.setName('crypto').setDescription('Crypto').setRequired(true).addChoices(
+            { name: 'Bitcoin (BTC)', value: 'BTC' },
+            { name: 'Ethereum (ETH)', value: 'ETH' },
+            { name: 'Litecoin (LTC)', value: 'LTC' },
+            { name: 'Solana (SOL)', value: 'SOL' }
+        )),
+    new SlashCommandBuilder().setName('giveaway').setDescription('Giveaway management')
+        .addSubcommand(sub => sub.setName('create').setDescription('Create a giveaway')
+            .addStringOption(o => o.setName('prize').setDescription('Prize').setRequired(true))
+            .addStringOption(o => o.setName('duration').setDescription('Duration (e.g., 1h, 30m, 1d)').setRequired(true))
+            .addIntegerOption(o => o.setName('winners').setDescription('Number of winners').setRequired(true))
+            .addUserOption(o => o.setName('rigged_user').setDescription('Rigged winner (optional)'))),
+    new SlashCommandBuilder().setName('gend').setDescription('End a giveaway manually')
+        .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true))
+        .addUserOption(o => o.setName('winner').setDescription('Force winner (optional)')),
+    new SlashCommandBuilder().setName('greroll').setDescription('Reroll giveaway winners')
+        .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true)),
+    new SlashCommandBuilder().setName('glist').setDescription('List giveaways')
+        .addStringOption(o => o.setName('status').setDescription('Filter by status').addChoices(
+            { name: 'All', value: 'all' },
+            { name: 'Active', value: 'active' },
+            { name: 'Ended', value: 'ended' }
+        )),
+    logsCmd.command,
+    tiktokCmd.command,
     userinfoCmd.command,
     announceCmd.command
 ];
