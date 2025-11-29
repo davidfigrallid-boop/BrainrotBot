@@ -596,9 +596,10 @@ async function registerCommands(client) {
             await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), { body: [] });
         }
 
-        await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+        const commandsData = commands.map(cmd => cmd.toJSON ? cmd.toJSON() : cmd);
+        await rest.put(Routes.applicationCommands(client.user.id), { body: commandsData });
 
-        console.log('Successfully reloaded application (/) commands.');
+        console.log(`Successfully reloaded ${commandsData.length} application (/) commands.`);
     } catch (e) { console.error(e); }
 }
 

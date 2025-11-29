@@ -56,303 +56,284 @@
                     <div class="stat-card">
                         <h3>Brainrots Sold</h3>
                         <p id="stat-sold">0</p>
+                        </tbody>
+                        </table>
+                    </div>
+            </section>
+
+            <!-- Giveaways Page -->
+            <section id="giveaways" class="page-content">
+                <h2 class="page-title">🎁 Giveaways Management</h2>
+
+                <div class="actions-bar">
+                    <button class="btn btn-primary" onclick="openModal('giveawayModal')">➕ Create Giveaway</button>
+                    <button class="btn btn-success" onclick="fetchGiveaways()">🔄 Refresh</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Prize</th>
+                                <th>Winners</th>
+                                <th>Participants</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="giveaways-table">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Logs Page -->
+            <section id="logs" class="page-content">
+                <h2 class="page-title">📝 Server Logs</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Events</h3>
+                        <p id="stat-logs-total">0</p>
                     </div>
                     <div class="stat-card">
-                        <h3>Money Made</h3>
-                        <p id="stat-money">€0.00</p>
+                        <h3>Today</h3>
+                        <p id="stat-logs-today">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Log Channel</h3>
+                        <p id="stat-logs-channel" style="font-size: 1.2rem;">Not Set</p>
                     </div>
                 </div>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Rarity</th>
-                    <th>Price €</th>
-                    <th>Sold</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody id="brainrots-table">
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 2rem;">Loading...</td>
-                    </tr>
-                </tbody>
-                </table>
-    </div>
-    </section>
 
-    <!-- Giveaways Page -->
-    <section id="giveaways" class="page-content">
-        <h2 class="page-title">🎁 Giveaways Management</h2>
-
-        <div class="actions-bar">
-            <button class="btn btn-primary" onclick="openModal('giveawayModal')">➕ Create Giveaway</button>
-            <button class="btn btn-success" onclick="fetchGiveaways()">🔄 Refresh</button>
-        </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Prize</th>
-                        <th>Winners</th>
-                        <th>Participants</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="giveaways-table">
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 2rem;">Loading...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- Logs Page -->
-    <section id="logs" class="page-content">
-        <h2 class="page-title">📝 Server Logs</h2>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Events</h3>
-                <p id="stat-logs-total">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Today</h3>
-                <p id="stat-logs-today">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Log Channel</h3>
-                <p id="stat-logs-channel" style="font-size: 1.2rem;">Not Set</p>
-            </div>
-        </div>
-
-        <div class="actions-bar">
-            <button class="btn btn-primary" onclick="fetchLogs()">🔄 Refresh Logs</button>
-        </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Event Type</th>
-                        <th>User</th>
-                        <th>Details</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody id="logs-table">
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 2rem;">Use /logs setup in Discord to
-                            configure</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- TikTok Page -->
-    <section id="tiktok" class="page-content">
-        <h2 class="page-title">📱 TikTok Auto-Posting</h2>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Tracked Creators</h3>
-                <p id="stat-tiktok-creators">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Auto-Check</h3>
-                <p style="font-size: 1.2rem;">Every 10min</p>
-            </div>
-            <div class="stat-card">
-                <h3>Last Check</h3>
-                <p id="stat-tiktok-check" style="font-size: 1.2rem;">Never</p>
-            </div>
-        </div>
-
-        <div class="actions-bar">
-            <button class="btn btn-primary" onclick="fetchTikTokTracking()">🔄 Refresh</button>
-        </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Channel</th>
-                        <th>Last Video ID</th>
-                        <th>Last Check</th>
-                    </tr>
-                </thead>
-                <tbody id="tiktok-table">
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 2rem;">Use /tiktok add in Discord to
-                            track creators</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- User Stats Page -->
-    <section id="userstats" class="page-content">
-        <h2 class="page-title">👥 User Statistics</h2>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Messages</th>
-                        <th>Voice Time</th>
-                        <th>Invites</th>
-                        <th>Joined</th>
-                    </tr>
-                </thead>
-                <tbody id="userstats-table">
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 2rem;">Use /info @user in Discord to
-                            view stats</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- Announcements Page -->
-    <section id="announcements" class="page-content">
-        <h2 class="page-title">📢 Announcements & Polls</h2>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Active Polls</h3>
-                <p id="stat-polls-active">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Total Announcements</h3>
-                <p id="stat-announces-total">0</p>
-            </div>
-        </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Content</th>
-                        <th>Channel</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody id="announcements-table">
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 2rem;">Use /announce or /poll in
-                            Discord</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- Settings Page -->
-    <section id="settings" class="page-content">
-        <h2 class="page-title">⚙️ Settings</h2>
-
-        <div class="table-container" style="padding: 2rem;">
-            <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">API Configuration</h3>
-            <div class="form-group">
-                <label>Backend API URL</label>
-                <input type="text" id="api-url-input" placeholder="http://localhost:3000/api">
-            </div>
-            <button class="btn btn-primary" onclick="saveApiUrl()">Save Configuration</button>
-
-            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
-
-            <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">Cryptocurrency Prices</h3>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Bitcoin (BTC)</h3>
-                    <p id="crypto-btc">€0.00</p>
+                <div class="actions-bar">
+                    <button class="btn btn-primary" onclick="fetchLogs()">🔄 Refresh Logs</button>
                 </div>
-                <div class="stat-card">
-                    <h3>Ethereum (ETH)</h3>
-                    <p id="crypto-eth">€0.00</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Litecoin (LTC)</h3>
-                    <p id="crypto-ltc">€0.00</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Solana (SOL)</h3>
-                    <p id="crypto-sol">€0.00</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    </main>
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <button class="nav-btn active" onclick="showPage('dashboard')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
-        </button>
-        <button class="nav-btn" onclick="showPage('brainrots')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-            </svg>
-            Brainrots
-        </button>
-        <button class="nav-btn" onclick="showPage('giveaways')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 12v10H4V12"></path>
-                <rect x="2" y="7" width="20" height="5"></rect>
-            </svg>
-            Giveaways
-        </button>
-        <button class="nav-btn" onclick="showPage('logs')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-            </svg>
-            Logs
-        </button>
-        <button class="nav-btn" onclick="showPage('tiktok')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 11a4 4 0 1 0 4 4V3a5 5 0 0 0 5 5"></path>
-            </svg>
-            TikTok
-        </button>
-        <button class="nav-btn" onclick="showPage('userstats')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-            </svg>
-            Users
-        </button>
-        <button class="nav-btn" onclick="showPage('announcements')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3z"></path>
-            </svg>
-            Announce
-        </button>
-        <button class="nav-btn" onclick="showPage('settings')">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path
-                    d="M12 1v6m0 6v6M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M1 12h6m6 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24">
-                </path>
-            </svg>
-            Settings
-        </button>
-    </nav>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Event Type</th>
+                                <th>User</th>
+                                <th>Details</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 2rem;">Use /logs setup in Discord to
+                                    configure</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TikTok Page -->
+            <section id="tiktok" class="page-content">
+                <h2 class="page-title">📱 TikTok Auto-Posting</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Tracked Creators</h3>
+                        <p id="stat-tiktok-creators">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Auto-Check</h3>
+                        <p style="font-size: 1.2rem;">Every 10min</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Last Check</h3>
+                        <p id="stat-tiktok-check" style="font-size: 1.2rem;">Never</p>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <button class="btn btn-primary" onclick="fetchTikTokTracking()">🔄 Refresh</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Channel</th>
+                                <th>Last Video ID</th>
+                                <th>Last Check</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tiktok-table">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 2rem;">Use /tiktok add in Discord to
+                                    track creators</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- User Stats Page -->
+            <section id="userstats" class="page-content">
+                <h2 class="page-title">👥 User Statistics</h2>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Messages</th>
+                                <th>Voice Time</th>
+                                <th>Invites</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userstats-table">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem;">Use /info @user in Discord to
+                                    view stats</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Announcements Page -->
+            <section id="announcements" class="page-content">
+                <h2 class="page-title">📢 Announcements & Polls</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Active Polls</h3>
+                        <p id="stat-polls-active">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Announcements</h3>
+                        <p id="stat-announces-total">0</p>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Content</th>
+                                <th>Channel</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcements-table">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 2rem;">Use /announce or /poll in
+                                    Discord</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section id="settings" class="page-content">
+                <h2 class="page-title">⚙️ Settings</h2>
+
+                <div class="table-container" style="padding: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">API Configuration</h3>
+                    <div class="form-group">
+                        <label>Backend API URL</label>
+                        <input type="text" id="api-url-input" placeholder="http://localhost:3000/api">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveApiUrl()">Save Configuration</button>
+
+                    <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">Cryptocurrency Prices</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Bitcoin (BTC)</h3>
+                            <p id="crypto-btc">€0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Ethereum (ETH)</h3>
+                            <p id="crypto-eth">€0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Litecoin (LTC)</h3>
+                            <p id="crypto-ltc">€0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Solana (SOL)</h3>
+                            <p id="crypto-sol">€0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" onclick="showPage('dashboard')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Dashboard
+            </button>
+            <button class="nav-btn" onclick="showPage('brainrots')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                Brainrots
+            </button>
+            <button class="nav-btn" onclick="showPage('giveaways')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 12v10H4V12"></path>
+                    <rect x="2" y="7" width="20" height="5"></rect>
+                </svg>
+                Giveaways
+            </button>
+            <button class="nav-btn" onclick="showPage('logs')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Logs
+            </button>
+            <button class="nav-btn" onclick="showPage('tiktok')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11a4 4 0 1 0 4 4V3a5 5 0 0 0 5 5"></path>
+                </svg>
+                TikTok
+            </button>
+            <button class="nav-btn" onclick="showPage('userstats')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                </svg>
+                Users
+            </button>
+            <button class="nav-btn" onclick="showPage('announcements')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3z"></path>
+                </svg>
+                Announce
+            </button>
+            <button class="nav-btn" onclick="showPage('settings')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M12 1v6m0 6v6M4.93 4.93l4.24 4.24m5.66 5.66l4.24 4.24M1 12h6m6 0h6M4.93 19.07l4.24-4.24m5.66-5.66l4.24-4.24">
+                    </path>
+                </svg>
+                Settings
+            </button>
+        </nav>
     </div>
 
     <!-- Toast Container -->
