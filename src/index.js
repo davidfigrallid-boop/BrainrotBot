@@ -49,16 +49,31 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildInvites,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildModeration
     ]
 });
 
 // Initialize Bot Handlers
 botHandlers.setup(client);
 
+// Initialize Event Systems
+const { setupTracking } = require('./events/tracking');
+const { setupLogging } = require('./events/logging');
+setupTracking(client);
+setupLogging(client);
+
 client.once(Events.ClientReady, async (c) => {
     console.log(`✅ Ready! Logged in as ${c.user.tag}`);
     await initDatabase();
+
+    // Start TikTok auto-check service
+    const { startTikTokService } = require('./services/tiktok');
+    startTikTokService(c);
 });
 
 // --- Start Server & Bot ---

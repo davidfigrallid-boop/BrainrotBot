@@ -48,6 +48,37 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
 });
 
 // Navigation
+function showPage(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.page-content').forEach(page => {
+        page.classList.remove('active');
+    });
+
+    // Show selected page
+    const selectedPage = document.getElementById(pageId);
+    if (selectedPage) {
+        selectedPage.classList.add('active');
+    }
+
+    // Update nav buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event?.target?.closest('.nav-btn')?.classList.add('active');
+}
+
+// New Feature Functions (placeholders for API integration)
+function fetchLogs() {
+    showToast('Logs feature - use Discord command /logs setup', 'warning');
+}
+
+function fetchTikTokTracking() {
+    showToast('TikTok tracking - use Discord command /tiktok add', 'warning');
+}
+
+function fetchUserStats() {
+    showToast('User stats - use Discord command /info @user', 'warning');
+}
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -578,7 +609,7 @@ function importBrainrotsJSON() {
 
 async function processJSONImport() {
     const jsonText = document.getElementById('import-json-textarea').value.trim();
-    
+
     if (!jsonText) {
         showToast('Veuillez coller du JSON', 'warning');
         return;
@@ -674,11 +705,11 @@ function copyJSONToClipboard() {
 // Purge All Brainrots
 async function purgeAllBrainrots() {
     const confirmation = confirm('⚠️ ATTENTION ⚠️\n\nÊtes-vous sûr de vouloir supprimer TOUS les brainrots ?\n\nCette action est IRRÉVERSIBLE !');
-    
+
     if (!confirmation) return;
 
     const doubleConfirmation = confirm('Dernière confirmation !\n\nTapez OK pour supprimer définitivement tous les brainrots.');
-    
+
     if (!doubleConfirmation) return;
 
     try {
@@ -695,8 +726,8 @@ async function purgeAllBrainrots() {
 
         for (const brainrot of brainrots) {
             try {
-                const deleteRes = await fetch(`${API_URL}/brainrots/${brainrot.id}`, { 
-                    method: 'DELETE' 
+                const deleteRes = await fetch(`${API_URL}/brainrots/${brainrot.id}`, {
+                    method: 'DELETE'
                 });
 
                 if (deleteRes.ok) {

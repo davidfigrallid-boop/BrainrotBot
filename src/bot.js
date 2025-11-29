@@ -2,6 +2,12 @@ const { REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { pool } = require('./database');
 const { parsePrice, formatPrice, formatCryptoPrice, convertEURToAllCryptos, getSupportedCryptos, getCryptoRates, parseDuration, formatDuration } = require('./utils');
 
+// Import new commands
+const logsCmd = require('./commands/logs');
+const tiktokCmd = require('./commands/tiktok');
+const userinfoCmd = require('./commands/userinfo');
+const announceCmd = require('./commands/announce');
+
 // --- Constants ---
 const rarityOrder = {
     'Common': 1, 'Rare': 2, 'Epic': 3, 'Legendary': 4,
@@ -554,8 +560,8 @@ const commands = [
     new SlashCommandBuilder().setName('showcompte').setDescription('Show by account'),
     new SlashCommandBuilder().setName('giveaway').setDescription('Manage Giveaways')
         .addSubcommand(sub => sub.setName('create').setDescription('Create giveaway')
-            .addStringOption(o => o.setName('prize').setDescription('Prize').setRequired(true))
-            .addStringOption(o => o.setName('duration').setDescription('Duration (e.g. 1m, 1h, 30s)').setRequired(true))
+            .addStringOption(o => o.setName('prize').setDescription('Premio').setRequired(true))
+            .addStringOption(o => o.setName('du ration').setDescription('Duration (e.g. 1m, 1h, 30s)').setRequired(true))
             .addIntegerOption(o => o.setName('winners').setDescription('Winners').setRequired(true))
             .addUserOption(o => o.setName('rigged_user').setDescription('Force this user to win'))),
     new SlashCommandBuilder().setName('gend').setDescription('End a giveaway manually')
@@ -564,7 +570,12 @@ const commands = [
     new SlashCommandBuilder().setName('greroll').setDescription('Reroll giveaway winners')
         .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true)),
     new SlashCommandBuilder().setName('glist').setDescription('List giveaways')
-        .addStringOption(o => o.setName('status').setDescription('Filter status').addChoices({ name: 'Active', value: 'active' }, { name: 'Ended', value: 'ended' }))
+        .addStringOption(o => o.setName('status').setDescription('Filter status').addChoices({ name: 'Active', value: 'active' }, { name: 'Ended', value: 'ended' })),
+    // New commands
+    logsCmd.command,
+    tiktokCmd.command,
+    userinfoCmd.command,
+    announceCmd.command
 ];
 
 async function registerCommands(client) {
@@ -647,6 +658,11 @@ function setup(client) {
             else if (commandName === 'gend') await handleGend(interaction);
             else if (commandName === 'greroll') await handleGreroll(interaction);
             else if (commandName === 'glist') await handleGlist(interaction);
+            // New commands
+            else if (commandName === 'logs') await logsCmd.handleCommand(interaction);
+            else if (commandName === 'tiktok') await tiktokCmd.handleCommand(interaction);
+            else if (commandName === 'info') await userinfoCmd.handleCommand(interaction);
+            else if (commandName === 'announce') await announceCmd.handleCommand(interaction);
         }
     });
 }
