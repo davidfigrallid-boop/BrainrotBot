@@ -551,6 +551,7 @@ const commands = [
         .addStringOption(o => o.setName('traits').setDescription('Traits'))
         .addIntegerOption(o => o.setName('quantite').setDescription('Quantity')),
     new SlashCommandBuilder().setName('removebrainrot').setDescription('Remove brainrot')
+        .addStringOption(o => o.setName('name').setDescription('Name').setRequired(true)),
     userinfoCmd.command,
     announceCmd.command
 ];
