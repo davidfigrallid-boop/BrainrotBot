@@ -79,16 +79,6 @@ function fetchTikTokTracking() {
 function fetchUserStats() {
     showToast('User stats - use Discord command /info @user', 'warning');
 }
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-
-        btn.classList.add('active');
-        const page = btn.dataset.page;
-        document.getElementById(page).classList.add('active');
-    });
-});
 
 // Toast Notifications
 function showToast(message, type = 'success') {

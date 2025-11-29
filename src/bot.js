@@ -551,17 +551,6 @@ const commands = [
         .addStringOption(o => o.setName('traits').setDescription('Traits'))
         .addIntegerOption(o => o.setName('quantite').setDescription('Quantity')),
     new SlashCommandBuilder().setName('removebrainrot').setDescription('Remove brainrot')
-        .addStringOption(o => o.setName('name').setDescription('Name').setRequired(true)),
-    new SlashCommandBuilder().setName('updatebrainrot').setDescription('Update brainrot')
-        .addStringOption(o => o.setName('name').setDescription('Name').setRequired(true))
-        .addStringOption(o => o.setName('price_eur').setDescription('New Price EUR')),
-    new SlashCommandBuilder().setName('setcrypto').setDescription('Set default crypto')
-        .addIntegerOption(o => o.setName('id').setDescription('Giveaway ID').setRequired(true)),
-    new SlashCommandBuilder().setName('glist').setDescription('List giveaways')
-        .addStringOption(o => o.setName('status').setDescription('Filter status').addChoices({ name: 'Active', value: 'active' }, { name: 'Ended', value: 'ended' })),
-    // New commands
-    logsCmd.command,
-    tiktokCmd.command,
     userinfoCmd.command,
     announceCmd.command
 ];
