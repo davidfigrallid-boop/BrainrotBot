@@ -14,8 +14,8 @@ const { Client, GatewayIntentBits, Events } = require('discord.js');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { initDatabase } = require('./database');
-const apiRoutes = require('./api');
+const { initDatabase } = require('./config/database');
+const apiRoutes = require('./routes/api');
 const botHandlers = require('./bot');
 
 // --- Configuration ---
@@ -37,11 +37,11 @@ app.use((req, res, next) => {
 app.use('/api', apiRoutes);
 
 // Serve static files (HTML, CSS, JS) for admin panel
-app.use(express.static('.'));
+app.use(express.static('public'));
 
 // Serve index.html at root
 app.get('/', (req, res) => {
-    res.sendFile('index.html', { root: '.' });
+    res.sendFile('index.html', { root: './public' });
 });
 
 // --- Discord Bot Setup ---

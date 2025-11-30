@@ -1,5 +1,5 @@
 const { REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, PermissionFlagsBits } = require('discord.js');
-const { pool } = require('./database');
+const { pool } = require('./config/database');
 const { parsePrice, formatPrice, formatCryptoPrice, convertEURToAllCryptos, getSupportedCryptos, getCryptoRates, parseDuration, formatDuration } = require('./utils');
 
 // Import new commands
